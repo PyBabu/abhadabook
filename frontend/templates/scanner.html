@@ -1,0 +1,706 @@
+{% extends 'base.html' %}
+{% block title %}Ticket Scanner — AbadhaBook{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+    --bg:#0a0a0a; --surface:#141414; --sur2:#1e1e1e;
+    --border:rgba(255,255,255,0.08); --crimson:#8B0000;
+    --saffron:#FF6B00; --gold:#FFD700; --green:#00C851;
+    --red:#FF3B30; --orange:#FF9500; --text:#f0f0f0;
+    --muted:rgba(255,255,255,0.4); --radius:18px;
+}
+body { background:var(--bg) !important; color:var(--text); }
+footer { display:none; }
+nav { background:linear-gradient(135deg,#1a0000,#2a1000) !important; }
+
+.scanner-page { min-height:100vh; background:var(--bg); padding:24px 0 60px; }
+
+/* TOP BAR */
+.scanner-topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; flex-wrap:wrap; gap:12px; }
+.scanner-title { font-size:1.5rem; font-weight:700; color:var(--text); }
+.scanner-title span { color:var(--gold); }
+.topbar-right { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.today-badge { background:var(--sur2); border:1px solid var(--border); border-radius:50px; padding:8px 18px; font-size:0.82rem; color:var(--muted); display:flex; align-items:center; gap:8px; }
+.today-badge strong { color:var(--gold); font-size:1rem; }
+.sync-dot { width:8px; height:8px; border-radius:50%; background:var(--muted); display:inline-block; margin-right:4px; transition:background 0.3s; }
+.sync-dot.live { background:var(--green); box-shadow:0 0 6px var(--green); animation:pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.btn-logout { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:50px; padding:8px 18px; font-size:0.82rem; color:rgba(255,255,255,0.5); text-decoration:none; font-weight:600; transition:all 0.2s; }
+.btn-logout:hover { border-color:var(--saffron); color:var(--saffron); text-decoration:none; }
+
+/* MODE TOGGLE */
+.mode-toggle { display:flex; background:var(--sur2); border-radius:50px; padding:4px; gap:4px; margin-bottom:24px; border:1px solid var(--border); }
+.mode-btn { flex:1; padding:11px 20px; border-radius:46px; border:none; background:transparent; color:var(--muted); font-size:0.9rem; font-weight:600; cursor:pointer; font-family:'Poppins',sans-serif; transition:all 0.25s; display:flex; align-items:center; justify-content:center; gap:8px; }
+.mode-btn.active { background:linear-gradient(135deg,var(--crimson),var(--saffron)); color:white; box-shadow:0 4px 16px rgba(255,107,0,0.35); }
+
+/* SCANNER CARD */
+.scanner-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+
+/* CAMERA */
+.camera-panel { padding:28px; }
+.camera-viewport { position:relative; width:100%; aspect-ratio:1; max-width:360px; margin:0 auto 20px; border-radius:16px; overflow:hidden; background:#000; border:2px solid var(--border); }
+#qr-reader { width:100% !important; border:none !important; border-radius:14px; overflow:hidden; }
+#qr-reader video { width:100% !important; height:100% !important; object-fit:cover; border-radius:14px; }
+#qr-reader img,
+#qr-reader__dashboard_section_swaplink,
+#qr-reader__status_span { display:none !important; }
+#qr-reader__scan_region { border:none !important; }
+.scan-line { position:absolute; left:10%; right:10%; height:2px; background:linear-gradient(90deg,transparent,var(--saffron),var(--gold),var(--saffron),transparent); border-radius:2px; animation:scanMove 2s ease-in-out infinite; pointer-events:none; z-index:10; box-shadow:0 0 12px rgba(255,107,0,0.8); }
+@keyframes scanMove { 0%{top:10%} 50%{top:85%} 100%{top:10%} }
+.corner-wrap { position:absolute; inset:0; pointer-events:none; z-index:9; }
+.corner { position:absolute; width:28px; height:28px; border-color:var(--gold); border-style:solid; opacity:0.9; }
+.corner.tl { top:14px; left:14px; border-width:3px 0 0 3px; border-radius:4px 0 0 0; }
+.corner.tr { top:14px; right:14px; border-width:3px 3px 0 0; border-radius:0 4px 0 0; }
+.corner.bl { bottom:14px; left:14px; border-width:0 0 3px 3px; border-radius:0 0 0 4px; }
+.corner.br { bottom:14px; right:14px; border-width:0 3px 3px 0; border-radius:0 0 4px 0; }
+.camera-status { text-align:center; font-size:0.82rem; color:var(--muted); margin-bottom:14px; }
+.camera-status.active { color:var(--saffron); }
+.camera-controls { display:flex; gap:10px; justify-content:center; margin-top:4px; }
+.ctrl-btn { background:var(--sur2); border:1px solid var(--border); border-radius:50px; padding:9px 20px; font-size:0.82rem; font-weight:600; color:var(--text); cursor:pointer; font-family:'Poppins',sans-serif; transition:all 0.2s; }
+.ctrl-btn:hover { border-color:var(--saffron); color:var(--saffron); }
+.ctrl-btn.torch-on { background:rgba(255,215,0,0.12); border-color:var(--gold); color:var(--gold); }
+
+/* MANUAL */
+.manual-panel { padding:36px 28px; }
+.manual-icon { font-size:4rem; text-align:center; margin-bottom:16px; }
+.manual-label { font-size:0.82rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:8px; }
+.manual-input { width:100%; background:var(--sur2); border:2px solid var(--border); border-radius:14px; padding:16px 20px; font-size:1.1rem; font-weight:700; color:var(--text); font-family:'Poppins',sans-serif; letter-spacing:2px; transition:all 0.25s; text-transform:uppercase; outline:none; text-align:center; }
+.manual-input::placeholder { color:var(--muted); font-weight:400; letter-spacing:0; font-size:0.95rem; }
+.manual-input:focus { border-color:var(--saffron); box-shadow:0 0 0 4px rgba(255,107,0,0.12); background:var(--bg); }
+.btn-verify { width:100%; background:linear-gradient(135deg,var(--crimson),var(--saffron)); color:white; border:none; border-radius:50px; padding:16px; font-size:1rem; font-weight:700; cursor:pointer; font-family:'Poppins',sans-serif; transition:all 0.3s; margin-top:14px; display:flex; align-items:center; justify-content:center; gap:10px; }
+.btn-verify:hover { transform:translateY(-2px); box-shadow:0 10px 30px rgba(255,107,0,0.4); }
+.btn-verify:disabled { opacity:0.5; cursor:not-allowed; transform:none; box-shadow:none; }
+
+/* RESULT OVERLAY */
+.result-overlay { position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px; animation:overlayIn 0.25s ease; }
+@keyframes overlayIn { from{opacity:0;transform:scale(0.95)} to{opacity:1;transform:scale(1)} }
+.result-overlay.valid    { background:rgba(0,180,70,0.96); }
+.result-overlay.used     { background:rgba(220,30,30,0.96); }
+.result-overlay.invalid  { background:rgba(180,90,0,0.96); }
+.result-overlay.wrongdate{ background:rgba(100,60,180,0.96); }
+.result-box { text-align:center; color:white; max-width:400px; width:100%; }
+.result-icon { font-size:5rem; margin-bottom:12px; animation:iconPop 0.4s cubic-bezier(0.175,0.885,0.32,1.275); }
+@keyframes iconPop { from{transform:scale(0)} to{transform:scale(1)} }
+.result-status { font-size:2rem; font-weight:800; margin-bottom:8px; letter-spacing:1px; }
+.result-name   { font-size:1.5rem; font-weight:700; margin-bottom:6px; opacity:0.95; }
+.result-details { background:rgba(0,0,0,0.2); border-radius:16px; padding:16px 20px; margin:18px 0; text-align:left; }
+.result-row { display:flex; justify-content:space-between; font-size:0.9rem; padding:5px 0; border-bottom:1px solid rgba(255,255,255,0.1); }
+.result-row:last-child { border-bottom:none; }
+.result-row span:first-child { opacity:0.7; }
+.result-row span:last-child  { font-weight:700; }
+.result-timer { font-size:0.82rem; opacity:0.7; margin-top:14px; }
+.result-timer strong { color:var(--gold); font-size:1.1rem; }
+.btn-close-result { background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.4); border-radius:50px; padding:12px 36px; color:white; font-weight:700; font-size:0.95rem; cursor:pointer; font-family:'Poppins',sans-serif; transition:all 0.2s; margin-top:8px; }
+.btn-close-result:hover { background:rgba(255,255,255,0.3); }
+
+/* LOG + STATS */
+.log-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+.log-header { padding:16px 22px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+.log-header h6 { margin:0; font-size:0.88rem; font-weight:700; color:var(--text); text-transform:uppercase; letter-spacing:0.8px; }
+.log-clear { font-size:0.75rem; color:var(--muted); cursor:pointer; background:none; border:none; font-family:'Poppins',sans-serif; padding:0; transition:color 0.2s; }
+.log-clear:hover { color:var(--red); }
+.log-empty { padding:28px; text-align:center; color:var(--muted); font-size:0.85rem; line-height:1.6; }
+.log-item { display:flex; align-items:center; gap:14px; padding:14px 22px; border-bottom:1px solid var(--border); transition:background 0.2s; animation:logSlide 0.3s ease; }
+@keyframes logSlide { from{opacity:0;transform:translateX(-10px)} to{opacity:1;transform:translateX(0)} }
+.log-item:last-child { border-bottom:none; }
+.log-item:hover { background:var(--sur2); }
+.log-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.log-dot.valid    { background:var(--green);  box-shadow:0 0 8px var(--green); }
+.log-dot.used     { background:var(--red);    box-shadow:0 0 8px var(--red); }
+.log-dot.invalid  { background:var(--orange); box-shadow:0 0 8px var(--orange); }
+.log-info { flex:1; min-width:0; }
+.log-tn   { font-size:0.88rem; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.log-name { font-size:0.75rem; color:var(--muted); margin-top:2px; }
+.log-time { font-size:0.72rem; color:var(--muted); white-space:nowrap; }
+
+/* SPINNER */
+.spinner-ring { width:20px; height:20px; border:3px solid rgba(255,255,255,0.3); border-top-color:white; border-radius:50%; animation:spin 0.7s linear infinite; display:inline-block; vertical-align:middle; }
+@keyframes spin { to{transform:rotate(360deg)} }
+
+/* RESPONSIVE */
+@media (max-width:576px) {
+    .camera-panel,.manual-panel { padding:18px 14px; }
+    .result-status { font-size:1.6rem; }
+    .result-name   { font-size:1.2rem; }
+    .scanner-topbar { flex-direction:column; align-items:flex-start; }
+}
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="scanner-page">
+<div class="container">
+
+    <!-- TOP BAR -->
+    <div class="scanner-topbar">
+        <div>
+            <div class="scanner-title">&#128269; Ticket <span>Scanner</span></div>
+            <div style="font-size:0.78rem;color:var(--muted);margin-top:3px;">
+                Agara Shri Jagannatha Swamy Temple &middot; Staff Only
+            </div>
+        </div>
+        <div class="topbar-right">
+            <div class="today-badge">
+                <span class="sync-dot" id="syncDot"></span>
+                Scanned Today &nbsp;<strong id="scanCount">0</strong>
+            </div>
+            <a href="{% url 'staff_logout' %}" class="btn-logout">&#128682; Logout</a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- LEFT: Scanner -->
+        <div class="col-lg-7">
+            <div class="mode-toggle">
+                <button class="mode-btn active" id="btnCamera" onclick="switchMode('camera')">
+                    &#128247; Camera Scan
+                </button>
+                <button class="mode-btn" id="btnManual" onclick="switchMode('manual')">
+                    &#9000;&#65039; Manual Entry
+                </button>
+            </div>
+
+            <div class="scanner-card">
+
+                <!-- CAMERA PANEL -->
+                <div class="camera-panel" id="cameraPanel">
+                    <div class="camera-status active" id="cameraStatus">Starting camera...</div>
+                    <div class="camera-viewport">
+                        <div id="qr-reader"></div>
+                        <div class="scan-line"></div>
+                        <div class="corner-wrap">
+                            <div class="corner tl"></div>
+                            <div class="corner tr"></div>
+                            <div class="corner bl"></div>
+                            <div class="corner br"></div>
+                        </div>
+                    </div>
+                    <div class="camera-controls">
+                        <button class="ctrl-btn" id="torchBtn" onclick="toggleTorch()">
+                            &#128294; Torch
+                        </button>
+                        <button class="ctrl-btn" onclick="restartCamera()">
+                            &#128260; Restart
+                        </button>
+                    </div>
+                    <p style="text-align:center;font-size:0.75rem;color:var(--muted);margin-top:14px;">
+                        Point camera at devotee's QR code to scan instantly
+                    </p>
+                </div>
+
+                <!-- MANUAL PANEL -->
+                <div class="manual-panel" id="manualPanel" style="display:none;">
+                    <div class="manual-icon">&#127903;&#65039;</div>
+                    <div class="manual-label">Enter Ticket Number</div>
+                    <input
+                        type="text"
+                        class="manual-input"
+                        id="manualInput"
+                        placeholder="e.g.  ABK-XXXXXXXX"
+                        maxlength="12"
+                        autocomplete="off"
+                        oninput="this.value=this.value.toUpperCase()"
+                        onkeyup="if(event.key==='Enter') verifyManual()">
+                    <button class="btn-verify" id="verifyBtn" onclick="verifyManual()">
+                        <span id="verifyBtnText">&#128269; Verify Ticket</span>
+                    </button>
+                    <p style="text-align:center;font-size:0.75rem;color:var(--muted);margin-top:16px;">
+                        Type the ticket number and press Enter or click Verify
+                    </p>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- RIGHT: Stats + Log -->
+        <div class="col-lg-5">
+
+            <!-- Stats -->
+            <div class="log-card" style="margin-bottom:16px;">
+                <div class="log-header"><h6>&#128202; Today's Stats (Live)</h6></div>
+                <div style="padding:18px 22px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+                    <div style="text-align:center;">
+                        <div style="font-size:1.8rem;font-weight:800;color:var(--green);" id="statValid">0</div>
+                        <div style="font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;">Valid</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="font-size:1.8rem;font-weight:800;color:var(--red);" id="statUsed">0</div>
+                        <div style="font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;">Used</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="font-size:1.8rem;font-weight:800;color:var(--orange);" id="statInvalid">0</div>
+                        <div style="font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;">Invalid</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scan Log -->
+            <div class="log-card">
+                <div class="log-header">
+                    <h6>&#128203; Recent Scans</h6>
+                    <button class="log-clear" onclick="clearLogView()">Clear View</button>
+                </div>
+                <div id="scanLog">
+                    <div class="log-empty">
+                        Loading from database...<br>
+                        <span style="font-size:0.75rem;">All devices sync every 5 seconds</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+</div>
+
+<!-- RESULT OVERLAY -->
+<div class="result-overlay" id="resultOverlay" style="display:none;">
+    <div class="result-box">
+        <div class="result-icon"    id="resultIcon"></div>
+        <div class="result-status"  id="resultStatus"></div>
+        <div class="result-name"    id="resultName"></div>
+        <div class="result-details" id="resultDetails"></div>
+        <div class="result-timer">Auto-closing in <strong id="timerCount">4</strong>s</div>
+        <br>
+        <button class="btn-close-result" onclick="closeResult()">Tap to Scan Next</button>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<script>
+/* ================================================================
+   CONFIGURATION
+================================================================ */
+var API         = 'http://127.0.0.1:8001';
+var HEADERS     = {
+    'Content-Type' : 'application/json',
+    'X-Staff-Key'  : 'TempleSecure123'
+};
+
+/* ================================================================
+   STATE
+================================================================ */
+var currentMode    = 'camera';
+var html5QrCode    = null;
+var torchOn        = false;
+var isVerifying    = false;
+var autoCloseTimer = null;
+var pollTimer      = null;
+var logCleared     = false;   /* if staff pressed "Clear View" */
+
+/* ================================================================
+   BEEP  — Web Audio API, zero dependencies
+================================================================ */
+function beep(type) {
+    try {
+        var ctx  = new (window.AudioContext || window.webkitAudioContext)();
+        var osc  = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        if (type === 'success') {
+            osc.frequency.setValueAtTime(880,  ctx.currentTime);
+            osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.3, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.35);
+        } else {
+            osc.frequency.setValueAtTime(300, ctx.currentTime);
+            osc.frequency.setValueAtTime(180, ctx.currentTime + 0.15);
+            gain.gain.setValueAtTime(0.4, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.5);
+        }
+    } catch (e) { /* silent — audio blocked on some devices */ }
+}
+
+/* ================================================================
+   MODE SWITCH
+================================================================ */
+function switchMode(mode) {
+    currentMode = mode;
+    document.getElementById('btnCamera').classList.toggle('active', mode === 'camera');
+    document.getElementById('btnManual').classList.toggle('active', mode === 'manual');
+    document.getElementById('cameraPanel').style.display = (mode === 'camera') ? '' : 'none';
+    document.getElementById('manualPanel').style.display = (mode === 'manual') ? '' : 'none';
+    if (mode === 'camera') {
+        startCamera();
+    } else {
+        stopCamera();
+        setTimeout(function () {
+            document.getElementById('manualInput').focus();
+        }, 100);
+    }
+}
+
+/* ================================================================
+   CAMERA
+================================================================ */
+function startCamera() {
+    if (html5QrCode) return;
+    setStatus('Starting camera...');
+    html5QrCode = new Html5Qrcode('qr-reader');
+
+    Html5Qrcode.getCameras().then(function (cameras) {
+        if (!cameras || cameras.length === 0) {
+            setStatus('No camera found — use Manual Entry');
+            return;
+        }
+
+        /* prefer back camera on phones */
+        var camId = cameras[cameras.length - 1].id;
+
+        html5QrCode.start(
+            camId,
+            { fps: 15, qrbox: { width: 240, height: 240 }, aspectRatio: 1.0 },
+            function (decoded) {
+                if (isVerifying) return;
+
+                /* extract ABK- ticket number from QR data */
+                var cleaned = decoded.trim().toUpperCase();
+                var match   = cleaned.match(/ABK-[A-Z0-9]+/);
+                if (!match) {
+                    showToast('Invalid QR code format');
+                    return;
+                }
+
+                isVerifying = true;
+                setStatus('Verifying...');
+                verifyTicket(match[0]);
+            },
+            function () { /* per-frame errors — suppress silently */ }
+        ).then(function () {
+            setStatus('Ready — point camera at QR code');
+        }).catch(function () {
+            setStatus('Camera blocked — enable permission or use Manual Entry');
+        });
+
+    }).catch(function () {
+        setStatus('Cannot access camera — use Manual Entry');
+    });
+}
+
+function stopCamera() {
+    if (html5QrCode) {
+        html5QrCode.stop().catch(function () {});
+        html5QrCode.clear();
+        html5QrCode = null;
+    }
+}
+
+function restartCamera() {
+    stopCamera();
+    setTimeout(startCamera, 500);
+}
+
+function toggleTorch() {
+    if (!html5QrCode) return;
+    torchOn = !torchOn;
+    html5QrCode.applyVideoConstraints({ advanced: [{ torch: torchOn }] })
+        .catch(function () {
+            showToast('Torch not supported on this device');
+            torchOn = false;
+        });
+    document.getElementById('torchBtn').classList.toggle('torch-on', torchOn);
+    document.getElementById('torchBtn').textContent = torchOn ? 'Torch ON' : 'Torch';
+}
+
+function setStatus(msg) {
+    document.getElementById('cameraStatus').textContent = msg;
+}
+
+/* ================================================================
+   MANUAL VERIFY
+================================================================ */
+function verifyManual() {
+    if (isVerifying) return;
+    var val = document.getElementById('manualInput').value.trim().toUpperCase();
+    if (!val) {
+        showToast('Please enter a ticket number');
+        return;
+    }
+    isVerifying = true;
+    var btn = document.getElementById('verifyBtn');
+    var txt = document.getElementById('verifyBtnText');
+    btn.disabled    = true;
+    txt.innerHTML   = '<span class="spinner-ring"></span>&nbsp; Verifying...';
+    verifyTicket(val);
+}
+
+/* ================================================================
+   VERIFY — calls FastAPI
+================================================================ */
+async function verifyTicket(ticketNumber) {
+    try {
+        var res  = await fetch(API + '/api/scanner/verify', {
+            method  : 'POST',
+            headers : HEADERS,
+            body    : JSON.stringify({ ticket_number: ticketNumber })
+        });
+
+        var data = await res.json();
+
+        /* server / auth error */
+        if (res.status === 403) {
+            showToast('Staff key rejected — contact admin');
+            resetVerify();
+            return;
+        }
+        if (res.status === 500) {
+            showToast('Server error — try again');
+            resetVerify();
+            return;
+        }
+
+        /* route to correct result type */
+        switch (data.status) {
+            case 'success':
+                showResult('valid', data);
+                break;
+            case 'already_used':
+                showResult('used', data);
+                break;
+            case 'wrong_date':
+                showResult('wrongdate', data);
+                break;
+            case 'not_found':
+            case 'invalid_format':
+            default:
+                showResult('invalid', {
+                    ticket_number     : ticketNumber,
+                    user_name         : 'Not Found',
+                    mobile_number     : '—',
+                    booking_date      : '—',
+                    number_of_persons : '—'
+                });
+        }
+
+        /* after every scan, refresh DB stats + log */
+        await refreshFromDB();
+
+    } catch (e) {
+        showToast('Cannot connect to server. Is FastAPI running on 8001?');
+        resetVerify();
+    }
+}
+
+/* ================================================================
+   SHOW RESULT OVERLAY
+================================================================ */
+function showResult(type, data) {
+    var ov = document.getElementById('resultOverlay');
+    ov.className = 'result-overlay ' + type;
+
+    if (type === 'valid') {
+        document.getElementById('resultIcon').textContent   = '✅';
+        document.getElementById('resultStatus').textContent = 'VALID TICKET';
+        document.getElementById('resultName').textContent   = data.user_name || 'Devotee';
+        beep('success');
+    } else if (type === 'used') {
+        document.getElementById('resultIcon').textContent   = '❌';
+        document.getElementById('resultStatus').textContent = 'ALREADY USED';
+        document.getElementById('resultName').textContent   = data.user_name || 'Unknown';
+        beep('error');
+    } else if (type === 'wrongdate') {
+        document.getElementById('resultIcon').textContent   = '📅';
+        document.getElementById('resultStatus').textContent = 'WRONG DATE';
+        document.getElementById('resultName').textContent   = data.user_name || 'Unknown';
+        beep('error');
+    } else {
+        document.getElementById('resultIcon').textContent   = '⚠️';
+        document.getElementById('resultStatus').textContent = 'INVALID TICKET';
+        document.getElementById('resultName').textContent   = 'Not Found in System';
+        beep('error');
+    }
+
+    document.getElementById('resultDetails').innerHTML =
+        makeRow('Ticket No.', data.ticket_number     || '—') +
+        makeRow('Meal Date',  formatDate(data.booking_date)) +
+        makeRow('Persons',    data.number_of_persons  || '—') +
+        makeRow('Mobile',     data.mobile_number      || '—');
+
+    ov.style.display = 'flex';
+
+    /* auto-close countdown */
+    var count = 4;
+    document.getElementById('timerCount').textContent = count;
+    if (autoCloseTimer) clearInterval(autoCloseTimer);
+    autoCloseTimer = setInterval(function () {
+        count--;
+        var el = document.getElementById('timerCount');
+        if (el) el.textContent = count;
+        if (count <= 0) { clearInterval(autoCloseTimer); closeResult(); }
+    }, 1000);
+}
+
+function makeRow(label, value) {
+    return '<div class="result-row"><span>' + label + '</span><span>' + value + '</span></div>';
+}
+
+/* ================================================================
+   CLOSE RESULT — ready for next scan
+================================================================ */
+function closeResult() {
+    if (autoCloseTimer) { clearInterval(autoCloseTimer); autoCloseTimer = null; }
+    document.getElementById('resultOverlay').style.display = 'none';
+    resetVerify();
+}
+
+function resetVerify() {
+    isVerifying = false;
+    var btn = document.getElementById('verifyBtn');
+    var txt = document.getElementById('verifyBtnText');
+    if (btn) btn.disabled = false;
+    if (txt) txt.innerHTML = '&#128269; Verify Ticket';
+    var inp = document.getElementById('manualInput');
+    if (inp) { inp.value = ''; inp.focus(); }
+    if (currentMode === 'camera') setStatus('Ready — point camera at QR code');
+}
+
+/* ================================================================
+   DB SYNC
+   — fetches stats + logs from database every 5 seconds
+   — all devices see the same data (multi-device sync)
+================================================================ */
+async function refreshFromDB() {
+    try {
+        var statsRes = await fetch(API + '/api/scanner/stats/today', { headers: HEADERS });
+        var logsRes  = await fetch(API + '/api/scanner/logs/today',  { headers: HEADERS });
+
+        if (statsRes.ok) {
+            var s = await statsRes.json();
+            document.getElementById('statValid').textContent   = s.valid   || 0;
+            document.getElementById('statUsed').textContent    = s.used    || 0;
+            document.getElementById('statInvalid').textContent = (s.invalid || 0) + (s.wrong_date || 0);
+            document.getElementById('scanCount').textContent   = s.total   || 0;
+        }
+
+        if (logsRes.ok) {
+            var l = await logsRes.json();
+            if (!logCleared) {
+                renderDBLog(l.logs);
+            }
+        }
+
+        /* green live dot */
+        setSyncDot(true);
+
+    } catch (e) {
+        /* cannot reach server — show grey dot, don't interrupt scanning */
+        setSyncDot(false);
+    }
+}
+
+function setSyncDot(live) {
+    var dot = document.getElementById('syncDot');
+    if (dot) {
+        dot.className = 'sync-dot' + (live ? ' live' : '');
+    }
+}
+
+/* ================================================================
+   RENDER LOG FROM DATABASE
+================================================================ */
+function renderDBLog(logs) {
+    var container = document.getElementById('scanLog');
+    if (!logs || logs.length === 0) {
+        container.innerHTML = '<div class="log-empty">No scans yet today.<br><span style="font-size:0.75rem;">All devices sync every 5 seconds</span></div>';
+        return;
+    }
+
+    var html = '';
+    for (var i = 0; i < logs.length; i++) {
+        var entry    = logs[i];
+        var type     = entry.scan_result;
+        var dotClass = (type === 'valid') ? 'valid' : (type === 'used') ? 'used' : 'invalid';
+        var label    = (type === 'valid')      ? '&#10003; Valid'      :
+                       (type === 'used')       ? '&#10007; Used'       :
+                       (type === 'wrong_date') ? '&#128197; Wrong Date' : '&#9888; Invalid';
+
+        html += '<div class="log-item">'
+            +     '<div class="log-dot ' + dotClass + '"></div>'
+            +     '<div class="log-info">'
+            +       '<div class="log-tn">' + escHtml(entry.ticket_number)
+            +         ' <span style="font-weight:400;color:var(--muted);font-size:0.78rem;">' + label + '</span>'
+            +       '</div>'
+            +       '<div class="log-name">' + escHtml(entry.user_name) + '</div>'
+            +     '</div>'
+            +     '<div class="log-time">' + escHtml(entry.scanned_at) + '</div>'
+            +   '</div>';
+    }
+    container.innerHTML = html;
+}
+
+/* clear log from view only — DB record stays */
+function clearLogView() {
+    logCleared = true;
+    document.getElementById('scanLog').innerHTML =
+        '<div class="log-empty">Cleared from view.<br><span style="font-size:0.75rem;">Database records are kept safe.</span></div>';
+    /* re-enable auto-refresh after 10 seconds */
+    setTimeout(function () { logCleared = false; }, 10000);
+}
+
+/* ================================================================
+   POLLING — every 5 seconds
+================================================================ */
+function startPolling() {
+    refreshFromDB();
+    pollTimer = setInterval(refreshFromDB, 5000);
+}
+
+/* ================================================================
+   HELPERS
+================================================================ */
+function formatDate(s) {
+    if (!s || s === '—') return '—';
+    s = String(s).trim();
+    if (s.length === 10) s += 'T00:00:00';
+    if (s.length > 10 && s.charAt(10) === ' ') s = s.substring(0, 10) + 'T' + s.substring(11);
+    var d = new Date(s);
+    if (isNaN(d.getTime())) return s;
+    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function escHtml(str) {
+    if (!str) return '—';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function showToast(msg) {
+    var existing = document.querySelector('.sc-toast');
+    if (existing) existing.remove();
+    var el = document.createElement('div');
+    el.className  = 'sc-toast';
+    el.textContent = msg;
+    el.style.cssText =
+        'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);'
+        + 'background:rgba(20,20,20,0.96);color:#fff;padding:12px 24px;'
+        + 'border-radius:50px;font-size:0.88rem;font-weight:600;z-index:99999;'
+        + 'border:1px solid rgba(255,149,0,0.4);box-shadow:0 8px 32px rgba(0,0,0,0.5);'
+        + 'font-family:Poppins,sans-serif;white-space:nowrap;pointer-events:none;';
+    document.body.appendChild(el);
+    setTimeout(function () { el.remove(); }, 3500);
+}
+
+/* ================================================================
+   INIT
+================================================================ */
+document.addEventListener('DOMContentLoaded', function () {
+    startCamera();
+    startPolling();
+});
+</script>
+{% endblock %}

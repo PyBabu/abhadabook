@@ -1,0 +1,863 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}AbadhaBook — Book Your Mahaprasad Meal{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ═══════════════════════════════════════════
+   CSS VARIABLES  (fixes --saffron bug)
+═══════════════════════════════════════════ */
+:root {
+    --crimson:  #8B0000;
+    --saffron:  #FF6B00;
+    --gold:     #FFD700;
+    --cream:    #FFF8F0;
+    --text:     #333;
+    --muted:    #888;
+}
+
+/* ═══════════════════════════════════════════
+   CUTOFF BANNER
+═══════════════════════════════════════════ */
+.cutoff-banner {
+    background: linear-gradient(90deg, #8B0000, #FF6B00);
+    color: white;
+    padding: 12px;
+    text-align: center;
+    font-weight: 500;
+    font-size: 0.95rem;
+    position: relative;
+    z-index: 100;
+}
+.cutoff-banner span { color: var(--gold); font-weight: 700; }
+
+/* ═══════════════════════════════════════════
+   HERO  — with entrance animations
+═══════════════════════════════════════════ */
+.hero {
+    background:
+        linear-gradient(135deg, rgba(139,0,0,0.88), rgba(255,107,0,0.82)),
+        url('https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Jagannath_temple_puri.jpg/1200px-Jagannath_temple_puri.jpg');
+    background-size: cover;
+    background-position: center;
+    min-height: 90vh;
+    display: flex;
+    align-items: center;
+    color: white;
+    text-align: center;
+    overflow: hidden;
+    position: relative;
+}
+
+/* subtle radial shimmer overlay */
+.hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 30%,
+        rgba(255,215,0,0.08) 0%, transparent 65%);
+    pointer-events: none;
+}
+
+/* ── Hero animation keyframes ── */
+@keyframes heroFadeUp {
+    from { opacity: 0; transform: translateY(32px); }
+    to   { opacity: 1; transform: translateY(0);    }
+}
+@keyframes heroPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,215,0,0.35); }
+    50%       { box-shadow: 0 0 0 16px rgba(255,215,0,0);  }
+}
+
+.hero-tag {
+    font-size: 1rem;
+    color: var(--gold);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-bottom: 20px;
+    opacity: 0;
+    animation: heroFadeUp 0.7s ease forwards 0.2s;
+}
+.hero h1 {
+    font-size: clamp(2.2rem, 5vw, 3.2rem);
+    font-weight: 700;
+    line-height: 1.2;
+    opacity: 0;
+    animation: heroFadeUp 0.7s ease forwards 0.45s;
+}
+.hero h1 span { color: var(--gold); }
+.hero-sub {
+    font-size: 1.1rem;
+    opacity: 0;
+    max-width: 580px;
+    margin: 0 auto;
+    animation: heroFadeUp 0.7s ease forwards 0.65s;
+    line-height: 1.7;
+}
+.hero-btns {
+    opacity: 0;
+    animation: heroFadeUp 0.7s ease forwards 0.85s;
+}
+
+.btn-hero-primary {
+    background: var(--gold);
+    color: #1a1a1a;
+    font-weight: 700;
+    font-size: 1.05rem;
+    padding: 14px 38px;
+    border-radius: 50px;
+    border: none;
+    transition: all 0.3s;
+    text-decoration: none;
+    display: inline-block;
+    animation: heroPulse 2.5s infinite 1.5s;
+}
+.btn-hero-primary:hover {
+    background: white;
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+    color: #1a1a1a;
+}
+
+.btn-hero-secondary {
+    background: transparent;
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 13px 34px;
+    border-radius: 50px;
+    border: 2px solid rgba(255,255,255,0.7);
+    transition: all 0.3s;
+    text-decoration: none;
+    display: inline-block;
+}
+.btn-hero-secondary:hover {
+    background: white;
+    color: var(--crimson);
+    border-color: white;
+    transform: translateY(-3px);
+}
+
+/* ═══════════════════════════════════════════
+   INFO CARDS  (--saffron now defined)
+═══════════════════════════════════════════ */
+.info-card {
+    background: white;
+    border-radius: 20px;
+    padding: 35px 25px;
+    text-align: center;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.07);
+    transition: all 0.3s;
+    height: 100%;
+    border-bottom: 4px solid var(--saffron);   /* ← fixed */
+}
+.info-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 18px 44px rgba(0,0,0,0.13);
+}
+.info-card .icon { font-size: 2.5rem; margin-bottom: 15px; }
+.info-card h5 { font-weight: 700; color: var(--crimson); margin-bottom: 10px; }
+.info-card p  { color: #666; font-size: 0.95rem; margin: 0; }
+
+/* ═══════════════════════════════════════════
+   STEPS SECTION
+═══════════════════════════════════════════ */
+.steps-section {
+    background: linear-gradient(135deg, #8B0000, #FF6B00);
+    color: white;
+    padding: 70px 0;
+}
+.step-item { text-align: center; padding: 20px; }
+.step-number {
+    width: 60px; height: 60px;
+    background: var(--gold);
+    color: #1a1a1a;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+}
+.step-item h5 { font-weight: 700; margin-bottom: 8px; }
+.step-item p  { opacity: 0.85; font-size: 0.9rem; }
+
+/* ═══════════════════════════════════════════
+   BUILDER SECTION
+═══════════════════════════════════════════ */
+.builder-section {
+    background: #0F0500;
+    padding: 90px 0;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Ambient glow blobs */
+.builder-section::before {
+    content: '';
+    position: absolute;
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle,
+        rgba(139,0,0,0.35) 0%, transparent 70%);
+    top: -150px; left: -150px;
+    pointer-events: none;
+}
+.builder-section::after {
+    content: '';
+    position: absolute;
+    width: 400px; height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle,
+        rgba(255,107,0,0.2) 0%, transparent 70%);
+    bottom: -120px; right: -100px;
+    pointer-events: none;
+}
+
+/* ── Grid ── */
+.builder-grid {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 64px;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+}
+@media (max-width: 900px) {
+    .builder-grid { grid-template-columns: 1fr; gap: 40px; }
+}
+
+/* ── Photo side ── */
+.builder-photo-wrap {
+    position: relative;
+    display: flex;
+    justify-content: center;
+}
+
+/* Decorative rotating ring */
+.builder-photo-wrap::before {
+    content: '';
+    position: absolute;
+    inset: -10px;
+    border-radius: 30px;
+    background: linear-gradient(135deg,
+        var(--crimson), var(--saffron), var(--gold), var(--crimson));
+    background-size: 300% 300%;
+    animation: gradientSpin 4s linear infinite;
+    z-index: 0;
+    opacity: 0.8;
+}
+@keyframes gradientSpin {
+    0%   { background-position: 0% 50%;   }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%;   }
+}
+
+/* White inset so ring is visible */
+.builder-photo-inner {
+    position: relative;
+    z-index: 1;
+    background: #0F0500;
+    border-radius: 22px;
+    padding: 6px;
+    width: 100%;
+}
+
+.builder-photo {
+    width: 100%;
+    aspect-ratio: 4/5;
+    object-fit: cover;
+    border-radius: 18px;
+    display: block;
+    filter: brightness(0.97) saturate(1.05);
+}
+
+/* Tag overlaid on photo bottom */
+.builder-photo-tag {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    background: rgba(15,5,0,0.85);
+    border: 1px solid rgba(255,215,0,0.3);
+    backdrop-filter: blur(8px);
+    border-radius: 40px;
+    padding: 8px 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+.builder-photo-tag .dot {
+    width: 8px; height: 8px;
+    background: #4ade80;
+    border-radius: 50%;
+    animation: blink 1.8s ease-in-out infinite;
+}
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.3; }
+}
+.builder-photo-tag span {
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.85);
+    font-weight: 500;
+}
+
+/* ── Story side ── */
+.builder-story { color: white; }
+
+.builder-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,215,0,0.1);
+    border: 1px solid rgba(255,215,0,0.25);
+    border-radius: 30px;
+    padding: 6px 16px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 20px;
+}
+
+.builder-name {
+    font-size: clamp(2rem, 4vw, 2.8rem);
+    font-weight: 700;
+    color: white;
+    line-height: 1.1;
+    margin-bottom: 6px;
+}
+.builder-name span {
+    background: linear-gradient(90deg, var(--gold), var(--saffron));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.builder-role {
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.45);
+    font-weight: 500;
+    margin-bottom: 28px;
+    letter-spacing: 0.3px;
+}
+
+/* Quote callout */
+.builder-quote {
+    background: rgba(255,107,0,0.08);
+    border-left: 3px solid var(--saffron);
+    border-radius: 0 14px 14px 0;
+    padding: 18px 22px;
+    margin-bottom: 24px;
+    font-size: 1.05rem;
+    font-style: italic;
+    color: rgba(255,255,255,0.88);
+    line-height: 1.65;
+    position: relative;
+}
+.builder-quote::before {
+    content: '"';
+    position: absolute;
+    top: -8px; left: 16px;
+    font-size: 3.5rem;
+    color: var(--saffron);
+    opacity: 0.35;
+    font-style: normal;
+    line-height: 1;
+}
+
+.builder-body {
+    font-size: 0.95rem;
+    color: rgba(255,255,255,0.62);
+    line-height: 1.85;
+    margin-bottom: 32px;
+}
+.builder-body strong {
+    color: rgba(255,255,255,0.9);
+    font-weight: 600;
+}
+
+/* Problem pills */
+.problem-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 34px;
+}
+.problem-pill {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 30px;
+    padding: 7px 16px;
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.7);
+    transition: all 0.2s;
+}
+.problem-pill:hover {
+    background: rgba(255,107,0,0.12);
+    border-color: rgba(255,107,0,0.35);
+    color: white;
+}
+.problem-pill .pill-icon { font-size: 0.95rem; }
+
+/* Solution tag */
+.builder-solution {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: linear-gradient(135deg,
+        rgba(139,0,0,0.4), rgba(255,107,0,0.2));
+    border: 1px solid rgba(255,107,0,0.2);
+    border-radius: 16px;
+    padding: 16px 22px;
+}
+.solution-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+.solution-text { font-size: 0.88rem; color: rgba(255,255,255,0.8); line-height: 1.55; }
+.solution-text strong { color: var(--gold); font-weight: 700; display: block; margin-bottom: 2px; }
+
+/* ── stats strip ── */
+.builder-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-top: 36px;
+}
+.bstat {
+    background: rgba(255,255,255,0.03);
+    padding: 20px 16px;
+    text-align: center;
+    transition: background 0.2s;
+}
+.bstat:hover { background: rgba(255,107,0,0.08); }
+.bstat-num {
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: var(--gold);
+    line-height: 1;
+    margin-bottom: 4px;
+}
+.bstat-label {
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.42);
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    font-weight: 600;
+}
+
+/* ═══════════════════════════════════════════
+   PRICE CARD
+═══════════════════════════════════════════ */
+.price-card {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    border: 3px solid var(--gold);
+}
+.price-amount {
+    font-size: 4rem;
+    font-weight: 700;
+    color: var(--crimson);
+    line-height: 1;
+}
+.price-amount sup { font-size: 1.5rem; }
+
+/* ── Live Counter ── */
+.live-counter {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+}
+.counter-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--saffron);
+}
+.counter-label {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-weight: 500;
+}
+
+/* ── Section helpers ── */
+.section-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--crimson);
+    margin-bottom: 10px;
+}
+.section-subtitle {
+    color: var(--muted);
+    font-size: 1rem;
+    margin-bottom: 40px;
+}
+.divider {
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(90deg, #8B0000, #FF6B00);
+    border-radius: 2px;
+    margin: 10px auto 15px;
+}
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<!-- ── Cutoff Banner ── -->
+<div class="cutoff-banner">
+    ⏰ Important: Bookings close at <span>9:00 AM</span> every day — Book in advance to secure your Mahaprasad meal!
+</div>
+
+<!-- ══════════════════════════════════════════
+     HERO
+══════════════════════════════════════════ -->
+<section class="hero">
+    <div class="container">
+        <p class="hero-tag">🛕 Agara Shri Jagannatha Swamy Temple</p>
+        <h1 class="mb-4">
+            Book Your Sacred<br>
+            <span>Mahaprasad</span> Meal Online
+        </h1>
+        <p class="hero-sub mb-5">
+            No more missed calls or unanswered messages.<br>
+            Book your Abadha meal ticket instantly — anytime, anywhere.
+        </p>
+        <div class="hero-btns d-flex gap-3 justify-content-center flex-wrap">
+            <a href="/booking" class="btn-hero-primary">
+                🎟️ Book Now — ₹130/person
+            </a>
+            <a href="/my-tickets" class="btn-hero-secondary">
+                📱 View My Tickets
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     WHY ABADHABOOK
+══════════════════════════════════════════ -->
+<section class="py-5" style="background:#FAFAFA;">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title">Why AbadhaBook?</h2>
+            <div class="divider"></div>
+            <p class="section-subtitle">Simple, fast and reliable meal booking for devotees</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-3 col-sm-6">
+                <div class="info-card">
+                    <div class="icon">📱</div>
+                    <h5>Book Online</h5>
+                    <p>No calls needed. Book your meal ticket directly from your phone anytime.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="info-card">
+                    <div class="icon">⏰</div>
+                    <h5>Before 9 AM</h5>
+                    <p>Book before 9:00 AM so the temple can prepare the right amount of Mahaprasad.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="info-card">
+                    <div class="icon">🎟️</div>
+                    <h5>Digital Ticket</h5>
+                    <p>Get a QR code ticket instantly. Show it at the temple gate for entry.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="info-card">
+                    <div class="icon">✅</div>
+                    <h5>Instant Confirm</h5>
+                    <p>Your booking is confirmed immediately after payment. No waiting!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     HOW IT WORKS
+══════════════════════════════════════════ -->
+<section class="steps-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 style="font-size:2rem;font-weight:700;color:var(--gold);">How It Works</h2>
+            <div style="width:60px;height:4px;background:var(--gold);border-radius:2px;margin:10px auto;"></div>
+            <p style="opacity:0.85;">Book your Mahaprasad meal in 4 simple steps</p>
+        </div>
+        <div class="row g-3">
+            <div class="col-md-3 col-sm-6">
+                <div class="step-item">
+                    <div class="step-number">1</div>
+                    <h5>Login</h5>
+                    <p>Enter your mobile number and verify with OTP</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="step-item">
+                    <div class="step-number">2</div>
+                    <h5>Select Date</h5>
+                    <p>Choose your meal date and number of persons</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="step-item">
+                    <div class="step-number">3</div>
+                    <h5>Pay Online</h5>
+                    <p>Pay ₹130 per person via UPI, PhonePe or card</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="step-item">
+                    <div class="step-number">4</div>
+                    <h5>Show QR Code</h5>
+                    <p>Show your digital ticket at temple for Mahaprasad</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     WHY I BUILT THIS  (Builder Section)
+══════════════════════════════════════════ -->
+<section class="builder-section">
+    <div class="container">
+        <div class="builder-grid">
+
+            <!-- ── LEFT: Photo ── -->
+            <div class="builder-photo-wrap">
+                <div class="builder-photo-inner">
+                    <img
+                        src="{% static 'images/MY PHOTO.png' %}"
+                        alt="Builder"
+                        class="builder-photo"
+                        onerror="this.style.background='linear-gradient(135deg,#8B0000,#FF6B00)';
+                                 this.src='';
+                                 this.alt='Developer';">
+                </div>
+                <div class="builder-photo-tag">
+                    <div class="dot"></div>
+                    <span>Builder &amp; Developer · AbadhaBook</span>
+                </div>
+            </div>
+
+            <!-- ── RIGHT: Story ── -->
+            <div class="builder-story">
+
+                <div class="builder-eyebrow">
+                    ✦ &nbsp; Why I Built This
+                </div>
+
+                <h2 class="builder-name">
+                    Built from a<br><span>Real Problem</span>
+                </h2>
+                <p class="builder-role">
+                    Developer · Devotee · Problem Solver
+                </p>
+
+                <div class="builder-quote">
+                    Every time I wanted to book a Mahaprasad meal, I had to
+                    send a WhatsApp message and just… wait. Sometimes no reply.
+                    Sometimes a missed call. Sometimes I found out too late
+                    that spots were already full.
+                </div>
+
+                <p class="builder-body">
+                    I am a regular devotee at Agara Shri Jagannatha Swamy Temple.
+                    For months, booking a <strong>Mahaprasad meal meant uncertainty</strong> —
+                    there was no system, no confirmation, no digital ticket.
+                    You never knew if your spot was actually reserved until
+                    you physically showed up at the temple.
+                    <br><br>
+                    I faced these problems personally, and I knew other devotees
+                    did too. So I decided to <strong>build the solution myself.</strong>
+                </p>
+
+                <!-- Problems faced -->
+                <div class="problem-pills">
+                    <div class="problem-pill">
+                        <span class="pill-icon">📵</span>
+                        <span>No reply on WhatsApp</span>
+                    </div>
+                    <div class="problem-pill">
+                        <span class="pill-icon">📞</span>
+                        <span>Missed & unanswered calls</span>
+                    </div>
+                    <div class="problem-pill">
+                        <span class="pill-icon">😓</span>
+                        <span>No booking confirmation</span>
+                    </div>
+                    <div class="problem-pill">
+                        <span class="pill-icon">🚶</span>
+                        <span>Reached temple to find no spots</span>
+                    </div>
+                    <div class="problem-pill">
+                        <span class="pill-icon">🕘</span>
+                        <span>Didn't know the 9 AM cutoff</span>
+                    </div>
+                </div>
+
+                <!-- Solution -->
+                <div class="builder-solution">
+                    <div class="solution-icon">🛕</div>
+                    <div class="solution-text">
+                        <strong>AbadhaBook — The Solution</strong>
+                        Book online in 2 minutes, get a digital QR ticket instantly,
+                        and walk into the temple with confidence. Built with love
+                        for every devotee of Lord Jagannath.
+                    </div>
+                </div>
+
+                <!-- Stats strip -->
+                <div class="builder-stats">
+                    <div class="bstat">
+                        <div class="bstat-num">₹130</div>
+                        <div class="bstat-label">Per Person</div>
+                    </div>
+                    <div class="bstat">
+                        <div class="bstat-num">9AM</div>
+                        <div class="bstat-label">Daily Cutoff</div>
+                    </div>
+                    <div class="bstat">
+                        <div class="bstat-num">2 min</div>
+                        <div class="bstat-label">To Book</div>
+                    </div>
+                </div>
+
+            </div><!-- /.builder-story -->
+        </div><!-- /.builder-grid -->
+    </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     PRICE & AVAILABILITY
+══════════════════════════════════════════ -->
+<section class="py-5" style="background:#FAFAFA;">
+    <div class="container">
+        <div class="row align-items-center g-5">
+
+            <!-- Price Card -->
+            <div class="col-md-4">
+                <div class="price-card">
+                    <div class="mb-3" style="font-size:2rem;">🍱</div>
+                    <div class="price-amount"><sup>₹</sup>130</div>
+                    <p style="color:var(--muted);margin:10px 0 5px;">per person</p>
+                    <p style="color:#666;font-size:0.9rem;">
+                        Includes full Mahaprasad meal blessed by Lord Jagannath
+                    </p>
+                    <a href="/booking"
+                       class="btn-hero-primary mt-3 d-inline-block"
+                       style="font-size:0.95rem;padding:12px 30px;animation:none;">
+                        Book Now
+                    </a>
+                </div>
+            </div>
+
+            <!-- Info -->
+            <div class="col-md-8">
+                <h2 class="section-title">Sacred Mahaprasad of Lord Jagannath</h2>
+                <div class="divider" style="margin-left:0;"></div>
+                <p style="color:#666;line-height:1.8;" class="mb-4">
+                    The Mahaprasad (Abadha) offered to Lord Jagannath is considered one of the most
+                    sacred meals in Hindu tradition. Every devotee who partakes in this blessed food
+                    receives the divine grace of Lord Jagannath.
+                </p>
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="live-counter">
+                            <div class="counter-number" id="todayBookings">--</div>
+                            <div class="counter-label">Today's Bookings</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="live-counter">
+                            <div class="counter-number" id="availableSpots">--</div>
+                            <div class="counter-label">Spots Available Today</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 p-3 rounded"
+                     style="background:#fff3e0;border-left:4px solid #FF6B00;">
+                    <strong style="color:#FF6B00;">⏰ Booking Cutoff:</strong>
+                    <span style="color:#555;">
+                        Bookings close at 9:00 AM daily so the temple can prepare
+                        the right quantity of Mahaprasad.
+                    </span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     CTA
+══════════════════════════════════════════ -->
+<section class="py-5"
+         style="background:linear-gradient(135deg,#8B0000,#FF6B00);">
+    <div class="container text-center text-white">
+        <h2 style="font-size:2rem;font-weight:700;margin-bottom:10px;">
+            Ready to Book Your Mahaprasad? 🙏
+        </h2>
+        <p style="opacity:0.9;margin-bottom:30px;font-size:1.05rem;">
+            Join devotees who book online — simple, fast, and hassle-free.
+        </p>
+        <a href="/booking"
+           class="btn-hero-primary"
+           style="font-size:1.1rem;padding:15px 50px;animation:none;">
+            🎟️ Book Your Meal — ₹130/person
+        </a>
+    </div>
+</section>
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+async function loadAvailability() {
+    try {
+        var today    = new Date().toISOString().split('T')[0];
+        var response = await fetch('http://127.0.0.1:8001/api/booking/availability/' + today);
+        var data     = await response.json();
+
+        var maxCapacity = data.total_capacity || 200;
+        var available   = data.available_spots || 0;
+        var booked      = maxCapacity - available;
+
+        document.getElementById('todayBookings').textContent  = booked;
+        document.getElementById('availableSpots').textContent = available;
+
+        if (available === 0) {
+            document.getElementById('availableSpots').style.color = '#e74c3c';
+        }
+    } catch (e) {
+        document.getElementById('todayBookings').textContent  = '0';
+        document.getElementById('availableSpots').textContent = '200';
+    }
+}
+
+loadAvailability();
+</script>
+{% endblock %}

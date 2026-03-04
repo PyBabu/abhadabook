@@ -1,0 +1,1038 @@
+{% extends 'base.html' %}
+{% block title %}Analytics Dashboard — AbadhaBook{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ══ PAGE BASE ══════════════════════════════════════════════ */
+:root {
+    --red:    #8B0000;
+    --saffron:#FF6B00;
+    --gold:   #FFD700;
+    --green:  #28a745;
+    --blue:   #1565C0;
+    --purple: #6A1B9A;
+    --teal:   #00695C;
+    --cream:  #FFF8F0;
+    --border: #eee;
+    --muted:  #888;
+    --card-shadow: 0 4px 20px rgba(0,0,0,0.07);
+}
+body { background: #f4f4f8; }
+
+/* ══ HERO ═══════════════════════════════════════════════════ */
+.analytics-hero {
+    background: linear-gradient(135deg, #1a0000 0%, #8B0000 50%, #FF6B00 100%);
+    color: white;
+    padding: 40px 0 56px;
+}
+.analytics-hero h1 { font-size: 2rem; font-weight: 800; margin-bottom: 6px; }
+.analytics-hero p  { opacity: 0.8; font-size: 0.95rem; margin: 0; }
+.hero-meta {
+    font-size: 0.8rem;
+    opacity: 0.6;
+    margin-top: 6px;
+}
+.btn-refresh {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 50px;
+    padding: 8px 20px;
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    transition: all 0.2s;
+}
+.btn-refresh:hover {
+    background: rgba(255,255,255,0.28);
+}
+.btn-refresh.spinning i { animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ══ MAIN CONTENT ═══════════════════════════════════════════ */
+.analytics-body {
+    margin-top: -32px;
+    padding-bottom: 60px;
+}
+
+/* ══ KPI CARDS ══════════════════════════════════════════════ */
+.kpi-card {
+    background: white;
+    border-radius: 18px;
+    padding: 22px 22px 18px;
+    box-shadow: var(--card-shadow);
+    border-top: 4px solid transparent;
+    transition: transform 0.2s;
+    height: 100%;
+}
+.kpi-card:hover { transform: translateY(-3px); }
+.kpi-card.red    { border-top-color: var(--red); }
+.kpi-card.orange { border-top-color: var(--saffron); }
+.kpi-card.green  { border-top-color: var(--green); }
+.kpi-card.blue   { border-top-color: var(--blue); }
+.kpi-card.purple { border-top-color: var(--purple); }
+.kpi-card.teal   { border-top-color: var(--teal); }
+.kpi-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem;
+    margin-bottom: 14px;
+}
+.kpi-icon.red    { background: #fdecea; }
+.kpi-icon.orange { background: #fff3e0; }
+.kpi-icon.green  { background: #e8f5e9; }
+.kpi-icon.blue   { background: #e3f2fd; }
+.kpi-icon.purple { background: #f3e5f5; }
+.kpi-icon.teal   { background: #e0f2f1; }
+.kpi-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1a1a1a;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+.kpi-label {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.kpi-sub {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 6px;
+}
+
+/* ══ CHART CARDS ════════════════════════════════════════════ */
+.chart-card {
+    background: white;
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: var(--card-shadow);
+    height: 100%;
+}
+.chart-card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+}
+.chart-card-sub {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-bottom: 20px;
+}
+.chart-wrap {
+    position: relative;
+}
+.chart-wrap.bar-wrap  { height: 280px; }
+.chart-wrap.pie-wrap  { height: 240px; }
+.chart-wrap.line-wrap { height: 200px; }
+
+/* ══ SECTION HEADING ════════════════════════════════════════ */
+.section-heading {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 28px 0 14px;
+}
+
+/* ══ STATS ROW IN CHART CARD ════════════════════════════════ */
+.mini-stat-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+}
+.mini-stat {
+    background: #f8f8f8;
+    border-radius: 10px;
+    padding: 10px 14px;
+    flex: 1;
+    min-width: 80px;
+    text-align: center;
+}
+.mini-stat-val { font-size: 1.2rem; font-weight: 800; color: #1a1a1a; }
+.mini-stat-lbl { font-size: 0.7rem; color: var(--muted); font-weight: 600; }
+
+/* ══ OCCASIONS LIST ═════════════════════════════════════════ */
+.occ-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+.occ-item:last-child { border-bottom: none; }
+.occ-emoji { font-size: 1.4rem; width: 32px; text-align: center; flex-shrink: 0; }
+.occ-name  { flex: 1; font-weight: 600; font-size: 0.9rem; color: #333; }
+.occ-count { font-size: 0.82rem; color: var(--muted); }
+.occ-bar-track {
+    flex: 2;
+    height: 6px;
+    background: #eee;
+    border-radius: 3px;
+    overflow: hidden;
+}
+.occ-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #8B0000, #FF6B00);
+    transition: width 0.8s ease;
+}
+
+/* ══ PEAK DAYS TABLE ════════════════════════════════════════ */
+.peak-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+.peak-table th {
+    text-align: left;
+    padding: 8px 10px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #eee;
+}
+.peak-table td {
+    padding: 12px 10px;
+    border-bottom: 1px solid #f5f5f5;
+    color: #333;
+    vertical-align: middle;
+}
+.peak-table tr:last-child td { border-bottom: none; }
+.peak-table tr:hover td { background: #fafafa; }
+.rank-badge {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.78rem;
+    color: white;
+}
+.rank-1 { background: linear-gradient(135deg,#FFD700,#FF8C00); }
+.rank-2 { background: linear-gradient(135deg,#aaa,#777); }
+.rank-3 { background: linear-gradient(135deg,#cd7f32,#a0522d); }
+.rank-n { background: #e0e0e0; color: #666; }
+.status-pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+.s-confirmed { background:#e8f5e9; color:#1b5e20; }
+.s-cancelled { background:#fdecea; color:#b71c1c; }
+.s-pending   { background:#fff8e1; color:#e65100; }
+
+/* ══ RECENT BOOKINGS TABLE ══════════════════════════════════ */
+.recent-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+.recent-table th {
+    text-align: left;
+    padding: 9px 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: #fafafa;
+    border-bottom: 2px solid #eee;
+}
+.recent-table th:first-child { border-radius: 10px 0 0 0; }
+.recent-table th:last-child  { border-radius: 0 10px 0 0; }
+.recent-table td {
+    padding: 12px 12px;
+    border-bottom: 1px solid #f0f0f0;
+    color: #333;
+}
+.recent-table tr:last-child td { border-bottom: none; }
+.recent-table tr:hover td { background: #fffaf5; }
+.amt-cell { font-weight: 700; color: var(--red); }
+
+/* ══ LOADING SKELETON ═══════════════════════════════════════ */
+.skeleton {
+    background: linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: 8px;
+    color: transparent;
+    pointer-events: none;
+    user-select: none;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+/* ══ ERROR STATE ════════════════════════════════════════════ */
+.error-banner {
+    background: #fdecea;
+    border: 2px solid #ef9a9a;
+    border-radius: 14px;
+    padding: 18px 22px;
+    color: #b71c1c;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+    display: none;
+}
+
+/* ══ ALLTIME ROW ════════════════════════════════════════════ */
+.alltime-row {
+    background: linear-gradient(135deg, #1a0000, #8B0000);
+    border-radius: 18px;
+    padding: 22px 28px;
+    color: white;
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 16px;
+    text-align: center;
+}
+.alltime-item { flex: 1; min-width: 100px; }
+.alltime-val { font-size: 1.8rem; font-weight: 800; color: var(--gold); }
+.alltime-lbl { font-size: 0.75rem; opacity: 0.7; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+
+/* ══ RESPONSIVE ═════════════════════════════════════════════ */
+@media (max-width: 768px) {
+    .analytics-hero h1 { font-size: 1.5rem; }
+    .kpi-value { font-size: 1.6rem; }
+    .recent-table { font-size: 0.75rem; }
+    .recent-table th, .recent-table td { padding: 8px 6px; }
+    .alltime-row { gap: 10px; }
+    .alltime-val { font-size: 1.4rem; }
+}
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<!-- ══ HERO ════════════════════════════════════════════════════ -->
+<div class="analytics-hero">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+            <div>
+                <h1>📊 Analytics Dashboard</h1>
+                <p>Agara Shri Jagannatha Swamy Temple · Temple Management</p>
+                <div class="hero-meta" id="generatedAt">Loading data...</div>
+            </div>
+            <div class="d-flex gap-2 align-items-center">
+                <button class="btn-refresh" id="refreshBtn" onclick="loadDashboard()">
+                    <i class="fas fa-sync-alt me-1"></i> Refresh
+                </button>
+                <a href="{% url 'scanner' %}"
+                   style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);
+                          border-radius:50px;padding:8px 18px;color:white;font-size:0.85rem;
+                          font-weight:600;text-decoration:none;">
+                    📷 Scanner
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ BODY ════════════════════════════════════════════════════ -->
+<div class="analytics-body">
+<div class="container">
+
+    <!-- Error Banner -->
+    <div class="error-banner" id="errorBanner">
+        ❌ <span id="errorMsg">Cannot connect to FastAPI. Make sure server is running on port 8001.</span>
+    </div>
+
+    <!-- ── All-Time Stats ─────────────────────────────────── -->
+    <div class="alltime-row mb-4" id="alltimeRow">
+        <div class="alltime-item">
+            <div class="alltime-val skeleton" id="atBookings">000</div>
+            <div class="alltime-lbl">All-Time Bookings</div>
+        </div>
+        <div class="alltime-item">
+            <div class="alltime-val skeleton" id="atPersons">0000</div>
+            <div class="alltime-lbl">Total Persons Served</div>
+        </div>
+        <div class="alltime-item">
+            <div class="alltime-val skeleton" id="atRevenue">₹0</div>
+            <div class="alltime-lbl">All-Time Revenue</div>
+        </div>
+    </div>
+
+    <!-- ── Section: This Month ───────────────────────────── -->
+    <div class="section-heading">📅 This Month's Performance</div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-2">
+            <div class="kpi-card red">
+                <div class="kpi-icon red">💰</div>
+                <div class="kpi-value skeleton" id="kpiRevenue">₹0</div>
+                <div class="kpi-label">Revenue</div>
+                <div class="kpi-sub">Confirmed only</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-2">
+            <div class="kpi-card orange">
+                <div class="kpi-icon orange">🎟️</div>
+                <div class="kpi-value skeleton" id="kpiBookings">0</div>
+                <div class="kpi-label">Bookings</div>
+                <div class="kpi-sub" id="kpiBookingSub">0 confirmed</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-2">
+            <div class="kpi-card green">
+                <div class="kpi-icon green">👥</div>
+                <div class="kpi-value skeleton" id="kpiPersons">0</div>
+                <div class="kpi-label">Persons</div>
+                <div class="kpi-sub">Total registered</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-2">
+            <div class="kpi-card blue">
+                <div class="kpi-icon blue">✅</div>
+                <div class="kpi-value skeleton" id="kpiScanned">0</div>
+                <div class="kpi-label">Scanned</div>
+                <div class="kpi-sub">Tickets verified</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-2">
+            <div class="kpi-card teal">
+                <div class="kpi-icon teal">❌</div>
+                <div class="kpi-value skeleton" id="kpiCancelled">0</div>
+                <div class="kpi-label">Cancelled</div>
+                <div class="kpi-sub">This month</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-2">
+            <div class="kpi-card purple">
+                <div class="kpi-icon purple">⏳</div>
+                <div class="kpi-value skeleton" id="kpiPending">0</div>
+                <div class="kpi-label">Pending</div>
+                <div class="kpi-sub">Awaiting confirm</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Section: Charts ───────────────────────────────── -->
+    <div class="section-heading">📈 Booking Trends</div>
+
+    <!-- Bar chart: full width -->
+    <div class="chart-card mb-4">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-1">
+            <div>
+                <div class="chart-card-title">📅 Bookings Per Day — Last 30 Days</div>
+                <div class="chart-card-sub">Number of bookings placed each day (blue bars = bookings, line = persons)</div>
+            </div>
+            <div class="mini-stat-row" id="barMiniStats">
+                <div class="mini-stat">
+                    <div class="mini-stat-val skeleton" id="miniAvgDay">—</div>
+                    <div class="mini-stat-lbl">Avg/Day</div>
+                </div>
+                <div class="mini-stat">
+                    <div class="mini-stat-val skeleton" id="miniMaxDay">—</div>
+                    <div class="mini-stat-lbl">Best Day</div>
+                </div>
+                <div class="mini-stat">
+                    <div class="mini-stat-val skeleton" id="miniActiveDays">—</div>
+                    <div class="mini-stat-lbl">Active Days</div>
+                </div>
+            </div>
+        </div>
+        <div class="chart-wrap bar-wrap">
+            <canvas id="chartBookingsPerDay"></canvas>
+        </div>
+    </div>
+
+    <!-- Pie + Occasions side by side -->
+    <div class="row g-4 mb-4">
+
+        <!-- Payment Methods Pie -->
+        <div class="col-lg-5">
+            <div class="chart-card">
+                <div class="chart-card-title">💳 Payment Methods</div>
+                <div class="chart-card-sub">Breakdown of confirmed payments</div>
+                <div class="chart-wrap pie-wrap">
+                    <canvas id="chartPayments"></canvas>
+                </div>
+                <div id="payLegend" class="mt-3"></div>
+            </div>
+        </div>
+
+        <!-- Occasions breakdown -->
+        <div class="col-lg-7">
+            <div class="chart-card">
+                <div class="chart-card-title">🎉 Special Occasions</div>
+                <div class="chart-card-sub">Most common booking occasions (confirmed bookings)</div>
+                <div id="occasionsList">
+                    <div style="color:#aaa;font-size:0.85rem;padding:20px 0;text-align:center;">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ── Section: Peak Days ─────────────────────────────── -->
+    <div class="section-heading">🏆 Peak Booking Days (All Time)</div>
+
+    <div class="chart-card mb-4">
+        <div class="chart-card-title">📌 Top 7 Busiest Days</div>
+        <div class="chart-card-sub">Days with the most persons booked — ever</div>
+        <div class="table-responsive">
+            <table class="peak-table" id="peakTable">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Date</th>
+                        <th>Day</th>
+                        <th>Bookings</th>
+                        <th>Persons</th>
+                        <th>Revenue</th>
+                    </tr>
+                </thead>
+                <tbody id="peakTableBody">
+                    <tr><td colspan="6" style="text-align:center;color:#aaa;padding:20px;">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ── Section: Revenue chart ─────────────────────────── -->
+    <div class="section-heading">💰 Revenue Trend</div>
+
+    <div class="chart-card mb-4">
+        <div class="chart-card-title">₹ Daily Revenue — Last 30 Days</div>
+        <div class="chart-card-sub">Confirmed bookings revenue only</div>
+        <div class="chart-wrap line-wrap">
+            <canvas id="chartRevenue"></canvas>
+        </div>
+    </div>
+
+    <!-- ── Section: Recent Bookings ─────────────────────────── -->
+    <div class="section-heading">🕐 Recent Bookings</div>
+
+    <div class="chart-card mb-4">
+        <div class="chart-card-title">Last 10 Bookings</div>
+        <div class="chart-card-sub">Most recently created bookings across all users</div>
+        <div class="table-responsive">
+            <table class="recent-table">
+                <thead>
+                    <tr>
+                        <th>#ID</th>
+                        <th>Name</th>
+                        <th>Mobile</th>
+                        <th>Date</th>
+                        <th>Persons</th>
+                        <th>Amount</th>
+                        <th>Occasion</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="recentTableBody">
+                    <tr><td colspan="8" style="text-align:center;color:#aaa;padding:20px;">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   CONFIG
+════════════════════════════════════════════════════════════ */
+const API       = 'http://127.0.0.1:8001';
+const STAFF_KEY = 'TempleSecure123';
+const HEADERS   = { 'Content-Type': 'application/json', 'X-Staff-Key': STAFF_KEY };
+
+/* Chart instances — kept so we can destroy before redraw */
+let chartBar     = null;
+let chartPie     = null;
+let chartRevenue = null;
+
+/* ════════════════════════════════════════════════════════════
+   CHART.JS GLOBAL DEFAULTS — match temple style
+════════════════════════════════════════════════════════════ */
+Chart.defaults.font.family  = "'Poppins', sans-serif";
+Chart.defaults.font.size    = 11;
+Chart.defaults.color        = '#888';
+Chart.defaults.plugins.legend.labels.boxWidth = 12;
+Chart.defaults.plugins.legend.labels.padding  = 14;
+
+/* ════════════════════════════════════════════════════════════
+   MAIN LOAD
+════════════════════════════════════════════════════════════ */
+async function loadDashboard() {
+    /* spinning icon */
+    const btn = document.getElementById('refreshBtn');
+    btn.classList.add('spinning');
+
+    try {
+        const res  = await fetch(API + '/api/analytics/dashboard', { headers: HEADERS });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            showError(err.detail || 'Server returned error ' + res.status);
+            return;
+        }
+
+        const d = await res.json();
+        hideError();
+
+        /* update generated-at label */
+        document.getElementById('generatedAt').textContent =
+            'Data as of ' + new Date().toLocaleString('en-IN', {
+                day:'numeric', month:'short', year:'numeric',
+                hour:'2-digit', minute:'2-digit'
+            });
+
+        renderKPIs(d.this_month);
+        renderAllTime(d.all_time);
+        renderBarChart(d.daily_last_30);
+        renderRevenueChart(d.daily_last_30);
+        renderPieChart(d.payment_methods);
+        renderOccasions(d.occasions);
+        renderPeakTable(d.peak_days);
+        renderRecentTable(d.recent_bookings);
+
+    } catch (e) {
+        showError('Cannot connect to FastAPI. Is it running on port 8001?');
+    } finally {
+        btn.classList.remove('spinning');
+    }
+}
+
+/* ════════════════════════════════════════════════════════════
+   KPI CARDS
+════════════════════════════════════════════════════════════ */
+function renderKPIs(m) {
+    setText('kpiRevenue',  fmtRupee(m.total_revenue));
+    setText('kpiBookings', m.total_bookings);
+    setText('kpiPersons',  m.total_persons);
+    setText('kpiScanned',  m.tickets_scanned);
+    setText('kpiCancelled',m.cancelled);
+    setText('kpiPending',  m.pending);
+    setText('kpiBookingSub', m.confirmed + ' confirmed');
+
+    /* remove skeleton class */
+    ['kpiRevenue','kpiBookings','kpiPersons','kpiScanned','kpiCancelled','kpiPending']
+        .forEach(id => document.getElementById(id).classList.remove('skeleton'));
+}
+
+/* ════════════════════════════════════════════════════════════
+   ALL-TIME ROW
+════════════════════════════════════════════════════════════ */
+function renderAllTime(a) {
+    setText('atBookings', a.total_bookings);
+    setText('atPersons',  a.total_persons);
+    setText('atRevenue',  fmtRupee(a.total_revenue));
+    ['atBookings','atPersons','atRevenue']
+        .forEach(id => document.getElementById(id).classList.remove('skeleton'));
+}
+
+/* ════════════════════════════════════════════════════════════
+   BAR CHART — bookings per day
+════════════════════════════════════════════════════════════ */
+function renderBarChart(daily) {
+    /* fill ALL 30 days — even ones with 0 bookings */
+    const filledDays = fillDays(daily, 30);
+
+    const labels   = filledDays.map(d => fmtDateShort(d.date));
+    const bookings = filledDays.map(d => d.bookings);
+    const persons  = filledDays.map(d => d.persons);
+
+    /* mini stats */
+    const activeDays = bookings.filter(v => v > 0).length;
+    const maxBook    = Math.max(...bookings, 0);
+    const avgBook    = activeDays > 0
+        ? (bookings.reduce((a,b) => a+b, 0) / activeDays).toFixed(1)
+        : 0;
+
+    setText('miniAvgDay',    avgBook);
+    setText('miniMaxDay',    maxBook);
+    setText('miniActiveDays',activeDays + '/30');
+    ['miniAvgDay','miniMaxDay','miniActiveDays']
+        .forEach(id => document.getElementById(id).classList.remove('skeleton'));
+
+    if (chartBar) chartBar.destroy();
+
+    chartBar = new Chart(
+        document.getElementById('chartBookingsPerDay').getContext('2d'),
+        {
+            data: {
+                labels,
+                datasets: [
+                    {
+                        type  : 'bar',
+                        label : 'Bookings',
+                        data  : bookings,
+                        backgroundColor: 'rgba(139,0,0,0.75)',
+                        borderRadius   : 6,
+                        order          : 2,
+                        yAxisID        : 'y'
+                    },
+                    {
+                        type       : 'line',
+                        label      : 'Persons',
+                        data       : persons,
+                        borderColor: '#FF6B00',
+                        backgroundColor: 'rgba(255,107,0,0.08)',
+                        borderWidth: 2,
+                        tension    : 0.4,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#FF6B00',
+                        fill    : true,
+                        order   : 1,
+                        yAxisID : 'y2'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: {
+                        callbacks: {
+                            title: items => 'Date: ' + items[0].label
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: {
+                            maxTicksLimit: 10,
+                            maxRotation  : 45
+                        }
+                    },
+                    y: {
+                        position: 'left',
+                        title   : { display: true, text: 'Bookings' },
+                        beginAtZero: true,
+                        grid: { color: '#f0f0f0' }
+                    },
+                    y2: {
+                        position: 'right',
+                        title   : { display: true, text: 'Persons' },
+                        beginAtZero: true,
+                        grid: { drawOnChartArea: false }
+                    }
+                }
+            }
+        }
+    );
+}
+
+/* ════════════════════════════════════════════════════════════
+   LINE CHART — daily revenue
+════════════════════════════════════════════════════════════ */
+function renderRevenueChart(daily) {
+    const filledDays = fillDays(daily, 30);
+    const labels  = filledDays.map(d => fmtDateShort(d.date));
+    const revenue = filledDays.map(d => d.revenue);
+
+    if (chartRevenue) chartRevenue.destroy();
+
+    chartRevenue = new Chart(
+        document.getElementById('chartRevenue').getContext('2d'),
+        {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [{
+                    label           : 'Revenue (₹)',
+                    data            : revenue,
+                    borderColor     : '#FFD700',
+                    backgroundColor : 'rgba(255,215,0,0.12)',
+                    borderWidth     : 2.5,
+                    tension         : 0.4,
+                    pointRadius     : 4,
+                    pointBackgroundColor: '#FF6B00',
+                    fill            : true
+                }]
+            },
+            options: {
+                responsive          : true,
+                maintainAspectRatio : false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: item => ' ₹' + item.raw.toLocaleString('en-IN')
+                        }
+                    }
+                },
+                scales: {
+                    x: { grid: { display: false }, ticks: { maxTicksLimit: 10, maxRotation: 45 } },
+                    y: {
+                        beginAtZero : true,
+                        grid        : { color: '#f0f0f0' },
+                        ticks       : {
+                            callback: v => '₹' + (v >= 1000 ? (v/1000).toFixed(0) + 'k' : v)
+                        }
+                    }
+                }
+            }
+        }
+    );
+}
+
+/* ════════════════════════════════════════════════════════════
+   PIE CHART — payment methods
+════════════════════════════════════════════════════════════ */
+const METHOD_LABELS = {
+    upi       : '📱 UPI',
+    qr        : '📷 QR Scan',
+    card      : '💳 Card',
+    netbanking: '🏦 Net Banking',
+    unknown   : '❓ Unknown',
+    cash      : '💵 Cash'
+};
+const PIE_COLORS = ['#8B0000','#FF6B00','#FFD700','#28a745','#1565C0','#6A1B9A'];
+
+function renderPieChart(payments) {
+    if (!payments || payments.length === 0) {
+        document.getElementById('payLegend').innerHTML =
+            '<p style="color:#aaa;font-size:0.82rem;text-align:center;">No payment data yet</p>';
+        return;
+    }
+
+    const labels = payments.map(p => METHOD_LABELS[p.method] || p.method);
+    const counts = payments.map(p => p.count);
+    const colors = PIE_COLORS.slice(0, payments.length);
+
+    if (chartPie) chartPie.destroy();
+
+    chartPie = new Chart(
+        document.getElementById('chartPayments').getContext('2d'),
+        {
+            type: 'doughnut',
+            data: {
+                labels,
+                datasets: [{
+                    data           : counts,
+                    backgroundColor: colors,
+                    borderWidth    : 2,
+                    borderColor    : '#fff',
+                    hoverOffset    : 8
+                }]
+            },
+            options: {
+                responsive          : true,
+                maintainAspectRatio : false,
+                cutout              : '60%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: item => {
+                                const total = counts.reduce((a,b) => a+b, 0);
+                                const pct   = ((item.raw / total) * 100).toFixed(1);
+                                return ' ' + item.raw + ' payments (' + pct + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    );
+
+    /* custom legend */
+    const total = counts.reduce((a,b) => a+b, 0);
+    const legendHtml = payments.map((p, i) => {
+        const pct = ((p.count / total) * 100).toFixed(1);
+        return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">'
+            + '<span style="width:12px;height:12px;border-radius:3px;background:' + colors[i] + ';flex-shrink:0;"></span>'
+            + '<span style="flex:1;font-size:0.82rem;color:#333;font-weight:600;">' + labels[i] + '</span>'
+            + '<span style="font-size:0.78rem;color:#888;">' + p.count + ' (' + pct + '%)</span>'
+            + '</div>';
+    }).join('');
+    document.getElementById('payLegend').innerHTML = legendHtml;
+}
+
+/* ════════════════════════════════════════════════════════════
+   OCCASIONS LIST
+════════════════════════════════════════════════════════════ */
+const OCC_META = {
+    none       : { emoji: '🙏', label: 'Regular Visit'   },
+    birthday   : { emoji: '🎂', label: 'Birthday'        },
+    anniversary: { emoji: '💑', label: 'Anniversary'     },
+    memorial   : { emoji: '🕯️', label: 'Memorial/Shraddha'},
+    festival   : { emoji: '🎉', label: 'Festival'        }
+};
+
+function renderOccasions(occasions) {
+    if (!occasions || occasions.length === 0) {
+        document.getElementById('occasionsList').innerHTML =
+            '<p style="color:#aaa;font-size:0.85rem;text-align:center;padding:20px 0;">No occasion data yet</p>';
+        return;
+    }
+
+    const maxCount = Math.max(...occasions.map(o => o.count), 1);
+
+    const html = occasions.map(o => {
+        const meta  = OCC_META[o.occasion] || { emoji: '📌', label: o.occasion };
+        const pct   = Math.round((o.count / maxCount) * 100);
+        return '<div class="occ-item">'
+            + '<span class="occ-emoji">'  + meta.emoji + '</span>'
+            + '<span class="occ-name">'   + meta.label + '</span>'
+            + '<span class="occ-count">'  + o.count + ' bookings · ' + o.persons + ' persons</span>'
+            + '<div class="occ-bar-track">'
+            +   '<div class="occ-bar-fill" style="width:' + pct + '%"></div>'
+            + '</div>'
+            + '</div>';
+    }).join('');
+
+    document.getElementById('occasionsList').innerHTML = html;
+}
+
+/* ════════════════════════════════════════════════════════════
+   PEAK TABLE
+════════════════════════════════════════════════════════════ */
+const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+function renderPeakTable(peak) {
+    if (!peak || peak.length === 0) {
+        document.getElementById('peakTableBody').innerHTML =
+            '<tr><td colspan="6" style="text-align:center;color:#aaa;padding:20px;">No booking data yet</td></tr>';
+        return;
+    }
+
+    const html = peak.map((p, i) => {
+        const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank-n';
+        const dayName   = DAY_NAMES[new Date(p.date + 'T00:00:00').getDay()];
+        return '<tr>'
+            + '<td><span class="rank-badge ' + rankClass + '">' + (i+1) + '</span></td>'
+            + '<td style="font-weight:700;">' + fmtDateFull(p.date) + '</td>'
+            + '<td style="color:#888;">'      + dayName + '</td>'
+            + '<td>'                          + p.bookings + '</td>'
+            + '<td style="font-weight:700;color:#8B0000;">' + p.persons + '</td>'
+            + '<td class="amt-cell">'         + fmtRupee(p.revenue) + '</td>'
+            + '</tr>';
+    }).join('');
+
+    document.getElementById('peakTableBody').innerHTML = html;
+}
+
+/* ════════════════════════════════════════════════════════════
+   RECENT BOOKINGS TABLE
+════════════════════════════════════════════════════════════ */
+function renderRecentTable(bookings) {
+    if (!bookings || bookings.length === 0) {
+        document.getElementById('recentTableBody').innerHTML =
+            '<tr><td colspan="8" style="text-align:center;color:#aaa;padding:20px;">No bookings yet</td></tr>';
+        return;
+    }
+
+    const html = bookings.map(b => {
+        const statusClass = b.status === 'confirmed' ? 's-confirmed'
+                          : b.status === 'cancelled' ? 's-cancelled' : 's-pending';
+        const meta = OCC_META[b.occasion] || { emoji: '📌', label: b.occasion };
+        return '<tr>'
+            + '<td style="color:#aaa;font-size:0.78rem;">#' + b.id + '</td>'
+            + '<td style="font-weight:600;">' + escHtml(b.name) + '</td>'
+            + '<td style="color:#888;">'      + b.mobile + '</td>'
+            + '<td>'                          + fmtDateFull(b.booking_date) + '</td>'
+            + '<td style="text-align:center;">' + b.persons + '</td>'
+            + '<td class="amt-cell">'         + fmtRupee(b.amount) + '</td>'
+            + '<td>'                          + meta.emoji + ' ' + meta.label + '</td>'
+            + '<td><span class="status-pill ' + statusClass + '">' + b.status + '</span></td>'
+            + '</tr>';
+    }).join('');
+
+    document.getElementById('recentTableBody').innerHTML = html;
+}
+
+/* ════════════════════════════════════════════════════════════
+   HELPERS
+════════════════════════════════════════════════════════════ */
+
+/* fill gaps in daily array so chart always shows 30 bars */
+function fillDays(daily, days) {
+    const map    = {};
+    daily.forEach(d => { map[d.date] = d; });
+
+    const result = [];
+    const now    = new Date();
+    now.setHours(0,0,0,0);
+
+    for (let i = days - 1; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(now.getDate() - i);
+        const key = d.getFullYear() + '-'
+            + String(d.getMonth()+1).padStart(2,'0') + '-'
+            + String(d.getDate()).padStart(2,'0');
+        result.push(map[key] || { date: key, bookings: 0, persons: 0, revenue: 0 });
+    }
+    return result;
+}
+
+/* "25 Jun" */
+function fmtDateShort(s) {
+    if (!s) return '';
+    const d = new Date(s + 'T00:00:00');
+    return d.getDate() + ' ' + ['Jan','Feb','Mar','Apr','May','Jun',
+                                 'Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
+}
+
+/* "25 Jun 2025" */
+function fmtDateFull(s) {
+    if (!s) return '—';
+    const d = new Date(s + 'T00:00:00');
+    return d.getDate() + ' '
+        + ['Jan','Feb','Mar','Apr','May','Jun',
+           'Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]
+        + ' ' + d.getFullYear();
+}
+
+/* "₹1,30,000" */
+function fmtRupee(n) {
+    return '₹' + Number(n).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+}
+
+function setText(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+}
+
+function escHtml(str) {
+    return String(str || '')
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showError(msg) {
+    const el = document.getElementById('errorBanner');
+    document.getElementById('errorMsg').textContent = msg;
+    el.style.display = 'block';
+}
+
+function hideError() {
+    document.getElementById('errorBanner').style.display = 'none';
+}
+
+/* ════════════════════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', function () {
+    loadDashboard();
+});
+</script>
+{% endblock %}

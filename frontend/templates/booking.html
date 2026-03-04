@@ -1,0 +1,1690 @@
+{% extends 'base.html' %}
+
+{% block title %}Book Mahaprasad Meal — AbadhaBook{% endblock %}
+
+{% block extra_css %}
+<style>
+
+/* ===================== HERO ===================== */
+.booking-hero {
+    background: linear-gradient(135deg, #8B0000, #FF6B00);
+    color: white;
+    padding: 50px 0 60px;
+    text-align: center;
+}
+.booking-hero h1 { font-size: 2.2rem; font-weight: 700; }
+.booking-hero p { opacity: 0.9; font-size: 1rem; }
+
+/* ===================== BOOKING CARD ===================== */
+.booking-card {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    margin-top: -30px;
+    position: relative;
+    z-index: 10;
+}
+
+/* ===================== STEP INDICATOR ===================== */
+.step-indicator {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 0;
+}
+.step-dot {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #eee;
+    color: #999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+    flex-shrink: 0;
+}
+.step-dot.active {
+    background: linear-gradient(135deg, #8B0000, #FF6B00);
+    color: white;
+    box-shadow: 0 4px 15px rgba(255,107,0,0.4);
+}
+.step-dot.completed {
+    background: #28a745;
+    color: white;
+}
+.step-line {
+    flex: 1;
+    height: 3px;
+    background: #eee;
+    max-width: 80px;
+    transition: all 0.3s;
+}
+.step-line.active {
+    background: linear-gradient(90deg, #8B0000, #FF6B00);
+}
+.step-label {
+    font-size: 0.75rem;
+    color: #999;
+    text-align: center;
+}
+.step-label.active { color: #FF6B00; font-weight: 600; }
+
+/* ===================== FORM ELEMENTS ===================== */
+.form-label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 6px;
+    display: block;
+}
+.form-control, .form-select {
+    border: 2px solid #eee;
+    border-radius: 12px;
+    padding: 12px 15px;
+    font-size: 1rem;
+    transition: all 0.3s;
+    width: 100%;
+}
+.form-control:focus, .form-select:focus {
+    border-color: #FF6B00;
+    box-shadow: 0 0 0 3px rgba(255,107,0,0.1);
+    outline: none;
+}
+
+/* ===================== BUTTONS ===================== */
+.btn-saffron {
+    background: linear-gradient(135deg, #8B0000, #FF6B00);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 14px 40px;
+    font-size: 1rem;
+    font-weight: 600;
+    width: 100%;
+    transition: all 0.3s;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+}
+.btn-saffron:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255,107,0,0.4);
+    color: white;
+}
+.btn-saffron:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ===================== PRICE SUMMARY ===================== */
+.price-summary {
+    background: linear-gradient(135deg, #fff8f0, #ffe8d0);
+    border: 2px solid #FFD700;
+    border-radius: 15px;
+    padding: 20px;
+    margin-top: 20px;
+}
+.price-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+    color: #555;
+}
+.price-row.total {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #8B0000;
+    border-top: 2px dashed #FFD700;
+    padding-top: 10px;
+    margin-top: 10px;
+    margin-bottom: 0;
+}
+
+/* ===================== BADGES ===================== */
+.availability-badge {
+    padding: 6px 14px;
+    border-radius: 25px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-block;
+}
+.badge-open { background: #d4edda; color: #155724; }
+.badge-closed { background: #f8d7da; color: #721c24; }
+
+/* ===================== OTP INPUT ===================== */
+.otp-input {
+    text-align: center;
+    font-size: 1.8rem;
+    letter-spacing: 10px;
+    font-weight: 700;
+    border: 2px solid #eee;
+    border-radius: 12px;
+    padding: 15px;
+}
+
+/* ===================== PANELS ===================== */
+.section-panel { display: none; }
+.section-panel.active { display: block; }
+
+/* ===================== WARNING BOX ===================== */
+.warning-box {
+    background: #fff3cd;
+    border: 2px solid #ffc107;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    color: #856404;
+}
+
+/* ===================== PERSON COUNTER ===================== */
+.person-btn {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    border: 2px solid #FF6B00;
+    font-size: 1.4rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.person-btn-minus {
+    background: white;
+    color: #FF6B00;
+}
+.person-btn-plus {
+    background: #FF6B00;
+    color: white;
+}
+.person-btn:hover { transform: scale(1.1); }
+#personsCount {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #8B0000;
+    min-width: 40px;
+    text-align: center;
+}
+
+/* ===================== PAYMENT METHOD BOXES ===================== */
+.payment-method-box {
+    border: 2px solid #eee;
+    border-radius: 15px;
+    padding: 15px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: white;
+    height: 100%;
+}
+.payment-method-box:hover {
+    border-color: #FF6B00;
+    background: #fff8f0;
+}
+.payment-method-box.active-method {
+    border-color: #FF6B00;
+    background: #fff3e0;
+    box-shadow: 0 4px 15px rgba(255,107,0,0.2);
+}
+.payment-method-box .pm-icon { font-size: 1.8rem; margin-bottom: 5px; }
+.payment-method-box .pm-title { font-weight: 600; font-size: 0.9rem; color: #333; }
+.payment-method-box .pm-sub { font-size: 0.75rem; color: #888; }
+
+/* ===================== PAYMENT SECTIONS ===================== */
+.payment-section { display: none; }
+.payment-section.active { display: block; }
+
+/* ===================== QR PAYMENT BOX ===================== */
+.qr-payment-box {
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 25px;
+    text-align: center;
+}
+.qr-payment-box img {
+    border-radius: 10px;
+    border: 4px solid white;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* ===================== TICKET ===================== */
+.ticket-success { text-align: center; padding: 10px; }
+
+.ticket-box {
+    background: linear-gradient(135deg, #8B0000, #FF6B00);
+    color: white;
+    border-radius: 20px;
+    padding: 30px;
+    position: relative;
+    overflow: hidden;
+    text-align: left;
+}
+.ticket-box::before {
+    content: '🛕';
+    font-size: 9rem;
+    position: absolute;
+    right: -20px;
+    top: -20px;
+    opacity: 0.08;
+    line-height: 1;
+}
+.ticket-number-display {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #FFD700;
+    letter-spacing: 3px;
+    margin: 10px 0;
+}
+.qr-container {
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    display: inline-block;
+    margin: 12px 0;
+}
+.qr-container img { width: 140px; height: 140px; display: block; }
+
+/* ===================== PROCESSING OVERLAY ===================== */
+.processing-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.65);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.processing-box {
+    background: white;
+    border-radius: 20px;
+    padding: 40px 35px;
+    text-align: center;
+    max-width: 320px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.processing-spinner {
+    width: 60px;
+    height: 60px;
+    border: 5px solid #eee;
+    border-top: 5px solid #FF6B00;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ===================== TOAST ALERT ===================== */
+.toast-alert {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 99999;
+    padding: 14px 22px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    max-width: 350px;
+    animation: slideInRight 0.3s ease;
+}
+@keyframes slideInRight {
+    from { transform: translateX(100px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+.toast-error { background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545; }
+.toast-success { background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
+.toast-warning { background: #fff3cd; color: #856404; border-left: 4px solid #ffc107; }
+
+/* ===================== CALENDAR ===================== */
+.cal-wrap {
+    border: 2px solid #eee;
+    border-radius: 16px;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+}
+.cal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    background: linear-gradient(135deg, #8B0000, #FF6B00);
+    color: white;
+}
+.cal-month-label {
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.5px;
+}
+.cal-nav {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 1.3rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    line-height: 1;
+    font-family: 'Poppins', sans-serif;
+}
+.cal-nav:hover { background: rgba(255,255,255,0.35); }
+.cal-nav:disabled { opacity: 0.3; cursor: not-allowed; }
+.cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+}
+.cal-daynames {
+    background: #fff8f0;
+    border-bottom: 1px solid #eee;
+}
+.cal-daynames div {
+    text-align: center;
+    padding: 8px 0;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #888;
+    text-transform: uppercase;
+}
+.cal-dates {
+    padding: 8px;
+    gap: 4px;
+    background: #fff;
+}
+.cal-loading {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 28px;
+    color: #aaa;
+    font-size: 0.85rem;
+}
+.cal-cell {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.15s;
+    border: 2px solid transparent;
+    flex-direction: column;
+    gap: 2px;
+}
+.cal-cell.empty { cursor: default; }
+
+/* Past / disabled */
+.cal-cell.past {
+    background: #f5f5f5;
+    color: #ccc;
+    cursor: not-allowed;
+}
+/* Full — red */
+.cal-cell.full {
+    background: #fde8e8;
+    color: #cc0000;
+    cursor: not-allowed;
+}
+/* Almost full — yellow */
+.cal-cell.low {
+    background: #fff8e1;
+    color: #b85c00;
+    cursor: pointer;
+}
+.cal-cell.low:hover {
+    background: #ffe082;
+    border-color: #FFC107;
+    transform: scale(1.08);
+}
+/* Available — green */
+.cal-cell.open {
+    background: #e8f5e9;
+    color: #1b5e20;
+    cursor: pointer;
+}
+.cal-cell.open:hover {
+    background: #c8e6c9;
+    border-color: #4caf50;
+    transform: scale(1.08);
+}
+/* Selected */
+.cal-cell.selected {
+    background: linear-gradient(135deg, #8B0000, #FF6B00) !important;
+    color: white !important;
+    border-color: transparent !important;
+    transform: scale(1.1);
+    box-shadow: 0 4px 14px rgba(255,107,0,0.4);
+}
+/* Loading skeleton */
+.cal-cell.skeleton {
+    background: #f0f0f0;
+    color: transparent;
+    animation: shimmer 1.2s infinite;
+    cursor: wait;
+}
+@keyframes shimmer {
+    0%,100% { opacity: 0.6; }
+    50%      { opacity: 0.3; }
+}
+.cal-spots {
+    font-size: 0.55rem;
+    font-weight: 700;
+    opacity: 0.8;
+    line-height: 1;
+}
+/* Today ring */
+.cal-cell.today-ring {
+    box-shadow: inset 0 0 0 2px #FF6B00;
+}
+.cal-legend {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    padding: 10px 12px;
+    background: #fafafa;
+    border-top: 1px solid #eee;
+    font-size: 0.75rem;
+    color: #666;
+    flex-wrap: wrap;
+}
+.cal-pip {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    margin-right: 4px;
+    vertical-align: middle;
+}
+.cal-pip.green  { background: #4caf50; }
+.cal-pip.yellow { background: #FFC107; }
+.cal-pip.red    { background: #f44336; }
+.cal-pip.grey   { background: #ccc; }
+
+/* ===================== SELECTED DATE DISPLAY ===================== */
+.selected-date-display {
+    background: linear-gradient(135deg, #fff8f0, #ffe8d0);
+    border: 2px solid #FF6B00;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-top: 12px;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    color: #8B0000;
+}
+.selected-date-display.show { display: flex; }
+
+.info-side-card {
+    background: white;
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.08);
+    position: sticky;
+    top: 20px;
+}
+.info-side-row {
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+.info-side-row:last-of-type { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.info-side-label { font-size: 0.8rem; color: #888; display: block; margin-bottom: 2px; }
+.info-side-value { font-weight: 700; font-size: 0.95rem; color: #333; }
+
+
+/* Back Button */
+
+.btn-back {
+    background: white;
+    color: #8B0000;
+    border: 2px solid #8B0000;
+    border-radius: 50px;
+    padding: 13px 24px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.btn-back:hover {
+    background: #8B0000;
+    color: white;
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<!-- Hero -->
+<div class="booking-hero">
+    <div class="container">
+        <h1>🎟️ Book Mahaprasad Meal</h1>
+        <p>Agara Shri Jagannatha Swamy Temple — ₹130 per person</p>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="row justify-content-center g-4">
+
+        <!-- ── Main Booking Card ── -->
+        <div class="col-lg-7">
+            <div class="booking-card">
+
+                <!-- Step Indicator -->
+                <div class="step-indicator">
+                    <div class="step-dot active" id="dot1">1</div>
+                    <div class="step-line" id="line1"></div>
+                    <div class="step-dot" id="dot2">2</div>
+                    <div class="step-line" id="line2"></div>
+                    <div class="step-dot" id="dot3">3</div>
+                    <div class="step-line" id="line3"></div>
+                    <div class="step-dot" id="dot4">4</div>
+                </div>
+                <div class="d-flex justify-content-between px-1 mb-4">
+                    <small class="step-label active" id="label1">Login</small>
+                    <small class="step-label" id="label2">Details</small>
+                    <small class="step-label" id="label3">Payment</small>
+                    <small class="step-label" id="label4">Ticket</small>
+                </div>
+
+                <!-- ══ STEP 1: User Details ══ -->
+                <div class="section-panel active" id="step1">
+                    <h4 style="color:#8B0000;font-weight:700;" class="mb-1">📱 Enter Your Details</h4>
+                    <p class="text-muted mb-4" style="font-size:0.9rem;">We will send an OTP to verify your number</p>
+
+                    <div class="mb-3">
+                        <label class="form-label">Your Full Name</label>
+                        <input type="text" class="form-control" id="userName" placeholder="Enter your full name">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Mobile Number</label>
+                        <div class="input-group">
+                            <span class="input-group-text"
+                                style="border-radius:12px 0 0 12px;border:2px solid #eee;border-right:none;background:white;font-weight:600;">
+                                +91
+                            </span>
+                            <input type="tel" class="form-control" id="mobileNumber"
+                                placeholder="9876543210" maxlength="10"
+                                style="border-radius:0 12px 12px 0;">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">City</label>
+                        <input type="text" class="form-control" id="userCity" placeholder="Enter your city">
+                    </div>
+
+                    <button class="btn-saffron" onclick="sendOTP()">
+                        Send OTP 📲
+                    </button>
+                </div>
+
+                <!-- ══ STEP 1b: OTP ══ -->
+                <div class="section-panel" id="step1b">
+                    <h4 style="color:#8B0000;font-weight:700;" class="mb-1">🔐 Verify OTP</h4>
+                    <p class="text-muted mb-4" id="otpSentTo" style="font-size:0.9rem;">OTP sent to your mobile number</p>
+
+                    <div class="mb-3">
+                        <label class="form-label">Enter 6-digit OTP</label>
+                        <input type="text" class="form-control otp-input" id="otpInput"
+                            placeholder="------" maxlength="6">
+                        <small class="text-muted mt-1 d-block">
+                            💡 Check your FastAPI terminal window for OTP
+                        </small>
+                    </div>
+
+                    <button class="btn-saffron mb-3" onclick="verifyOTP()">
+                        Verify & Continue ✅
+                    </button>
+
+                    <p class="text-center">
+                        <a href="#" onclick="goToStep('step1')" style="color:#FF6B00;font-size:0.9rem;">
+                            ← Change Number
+                        </a>
+                    </p>
+                </div>
+
+                <!-- ══ STEP 2: Booking Details ══ -->
+                <div class="section-panel" id="step2">
+                    <h4 style="color:#8B0000;font-weight:700;" class="mb-1">📅 Select Meal Date</h4>
+                    <p class="text-muted mb-3" style="font-size:0.9rem;">Choose date and number of persons</p>
+
+                    <div class="warning-box">
+                        ⏰ <strong>Remember:</strong> Bookings close at <strong>9:00 AM</strong> every day. Book the previous evening to be safe!
+                    </div>
+
+                    <!-- hidden input keeps existing JS working unchanged -->
+                    <input type="hidden" id="bookingDate">
+
+                    <div class="mb-3">
+                        <label class="form-label">Select Meal Date</label>
+
+                        <!-- ══ AVAILABILITY CALENDAR ══ -->
+                        <div class="cal-wrap">
+
+                            <!-- Calendar header -->
+                            <div class="cal-header">
+                                <button class="cal-nav" id="calPrev" onclick="calNavigate(-1)">&#8249;</button>
+                                <span class="cal-month-label" id="calMonthLabel">Loading...</span>
+                                <button class="cal-nav" id="calNext" onclick="calNavigate(1)">&#8250;</button>
+                            </div>
+
+                            <!-- Day name row -->
+                            <div class="cal-grid cal-daynames">
+                                <div>Su</div><div>Mo</div><div>Tu</div>
+                                <div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
+                            </div>
+
+                            <!-- Date cells injected by JS -->
+                            <div class="cal-grid cal-dates" id="calDates">
+                                <div class="cal-loading">Loading availability...</div>
+                            </div>
+
+                            <!-- Legend -->
+                            <div class="cal-legend">
+                                <span><span class="cal-pip green"></span> Available</span>
+                                <span><span class="cal-pip yellow"></span> Almost Full</span>
+                                <span><span class="cal-pip red"></span> Full</span>
+                                <span><span class="cal-pip grey"></span> Closed</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Selected date + availability info -->
+                    <div id="availabilityInfo" style="display:none;" class="mb-3">
+                        <span class="availability-badge" id="availabilityBadge"></span>
+                        <small class="text-muted ms-2" id="availabilityText"></small>
+                    </div>
+
+                    <!-- Selected date chip -->
+                    <div class="selected-date-display mb-3" id="selectedDateChip">
+                        <span style="font-size:1.2rem;">📅</span>
+                        <span id="selectedDateText">No date selected</span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Number of Persons</label>
+                        <div class="d-flex align-items-center gap-3 mt-1">
+                            <button type="button" class="person-btn person-btn-minus" onclick="changePersons(-1)">−</button>
+                            <span id="personsCount">1</span>
+                            <button type="button" class="person-btn person-btn-plus" onclick="changePersons(1)">+</button>
+                            <small class="text-muted">(max 50 per booking)</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Special Occasion <span style="font-weight:400;color:#888;">(optional)</span></label>
+                        <select class="form-select" id="specialOccasion">
+                            <option value="">None</option>
+                            <option value="birthday">🎂 Birthday</option>
+                            <option value="anniversary">💑 Anniversary</option>
+                            <option value="memorial">🙏 Memorial / Shraddha</option>
+                            <option value="festival">🎉 Festival</option>
+                        </select>
+                    </div>
+
+                    <div class="price-summary">
+                        <div class="price-row">
+                            <span>Price per person</span>
+                            <span>₹130</span>
+                        </div>
+                        <div class="price-row">
+                            <span>Number of persons</span>
+                            <span id="summaryPersons">1</span>
+                        </div>
+                        <div class="price-row total">
+                            <span>Total Amount</span>
+                            <span id="summaryTotal">₹130</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-3 mt-4">
+                        <button class="btn-back" onclick="goToStep('step1'); updateStepUI(1);">
+                            ← Back
+                        </button>
+                        <button class="btn-saffron" style="flex:1;" onclick="proceedToPayment()">
+                            Proceed to Payment →
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ══ STEP 3: Payment ══ -->
+                <div class="section-panel" id="step3">
+                    <h4 style="color:#8B0000;font-weight:700;" class="mb-1">💳 Complete Payment</h4>
+                    <p class="text-muted mb-3" style="font-size:0.9rem;">Choose payment method and pay securely</p>
+
+                    <!-- Booking Summary -->
+                    <div class="price-summary mb-4">
+                        <div class="price-row">
+                            <span>📅 Meal Date</span>
+                            <span id="payDate" style="font-weight:600;">--</span>
+                        </div>
+                        <div class="price-row">
+                            <span>👥 Persons</span>
+                            <span id="payPersons" style="font-weight:600;">--</span>
+                        </div>
+                        <div class="price-row total">
+                            <span>💰 Total</span>
+                            <span id="payTotal">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Payment Method Selection -->
+                    <div class="mb-3">
+                        <label class="form-label">Select Payment Method</label>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <div class="payment-method-box active-method"
+                                    onclick="selectMethod(this,'upi')" id="method_upi">
+                                    <div class="pm-icon">📱</div>
+                                    <div class="pm-title">UPI</div>
+                                    <div class="pm-sub">GPay, PhonePe, Paytm</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="payment-method-box"
+                                    onclick="selectMethod(this,'qr')" id="method_qr">
+                                    <div class="pm-icon">📷</div>
+                                    <div class="pm-title">Scan QR</div>
+                                    <div class="pm-sub">Any UPI App</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="payment-method-box"
+                                    onclick="selectMethod(this,'card')" id="method_card">
+                                    <div class="pm-icon">💳</div>
+                                    <div class="pm-title">Card</div>
+                                    <div class="pm-sub">Debit / Credit</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="payment-method-box"
+                                    onclick="selectMethod(this,'netbanking')" id="method_netbanking">
+                                    <div class="pm-icon">🏦</div>
+                                    <div class="pm-title">Net Banking</div>
+                                    <div class="pm-sub">All Banks</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- UPI Section -->
+                    <div class="payment-section active mb-3" id="upi_section">
+                        <label class="form-label">Enter UPI ID</label>
+                        <input type="text" class="form-control" id="upiId"
+                            placeholder="yourname@upi or 9876543210@ybl">
+                        <small class="text-muted">Example: name@okicici, name@ybl, 9876543210@paytm</small>
+                    </div>
+
+                    <!-- QR Section -->
+                    <div class="payment-section mb-3" id="qr_section">
+                        <div class="qr-payment-box">
+                            <p style="font-weight:700;color:#333;margin-bottom:12px;font-size:1rem;">
+                                📷 Scan QR Code to Pay
+                            </p>
+                            <img id="paymentQR"
+                                src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=abadhabook@ybl&pn=AbadhaBook&am=130&cu=INR"
+                                alt="Payment QR" width="180" height="180">
+                            <p class="mt-2" style="font-size:0.9rem;color:#555;font-weight:600;">
+                                Pay ₹<span id="qrAmount">130</span> to AbadhaBook
+                            </p>
+                            <div style="background:#fff3cd;border-radius:8px;padding:10px;font-size:0.82rem;color:#856404;margin-top:8px;">
+                                ⚠️ After payment click <strong>"I Have Paid"</strong> below
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Section -->
+                    <div class="payment-section mb-3" id="card_section">
+                        <div class="mb-2">
+                            <label class="form-label">Card Number</label>
+                            <input type="text" class="form-control" id="cardNumber"
+                                placeholder="4111 1111 1111 1111" maxlength="19"
+                                oninput="formatCard(this)">
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="form-label">Expiry</label>
+                                <input type="text" class="form-control" id="cardExpiry"
+                                    placeholder="MM/YY" maxlength="5" oninput="formatExpiry(this)">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">CVV</label>
+                                <input type="password" class="form-control" id="cardCvv"
+                                    placeholder="***" maxlength="3">
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <label class="form-label">Name on Card</label>
+                            <input type="text" class="form-control" id="cardName"
+                                placeholder="As printed on card">
+                        </div>
+                    </div>
+
+                    <!-- Net Banking Section -->
+                    <div class="payment-section mb-3" id="netbanking_section">
+                        <label class="form-label">Select Your Bank</label>
+                        <select class="form-select" id="bankSelect">
+                            <option value="">-- Select Bank --</option>
+                            <option>State Bank of India</option>
+                            <option>HDFC Bank</option>
+                            <option>ICICI Bank</option>
+                            <option>Axis Bank</option>
+                            <option>Kotak Mahindra Bank</option>
+                            <option>Punjab National Bank</option>
+                            <option>Bank of Baroda</option>
+                            <option>Canara Bank</option>
+                            <option>Union Bank of India</option>
+                            <option>Indian Bank</option>
+                            <option>Other Bank</option>
+                        </select>
+                        <small class="text-muted mt-1 d-block">
+                            You will be redirected to your bank's login page
+                        </small>
+                    </div>
+
+                    <div class="d-flex gap-3 mt-2">
+                        <button class="btn-back" onclick="goToStep('step2'); updateStepUI(2);">
+                            ← Back
+                        </button>
+                        <button class="btn-saffron" style="flex:1;" onclick="confirmPayment()" id="payBtn">
+                            🔒 Pay <span id="payBtnAmount">₹130</span> & Confirm Booking
+                        </button>
+                    </div>
+                    <p class="text-center mt-2" style="font-size:0.8rem;color:#888;">
+                        🔒 100% Secure &nbsp;|&nbsp; Encrypted &nbsp;|&nbsp; Safe
+                    </p>
+                </div>
+
+                <!-- ══ STEP 4: Ticket ══ -->
+                <div class="section-panel" id="step4">
+                    <div class="ticket-success">
+                        <div style="font-size:3rem;margin-bottom:8px;">🎉</div>
+                        <h4 style="color:#28a745;font-weight:700;margin-bottom:5px;">Booking Confirmed!</h4>
+                        <p class="text-muted mb-4" style="font-size:0.9rem;">
+                            Your Mahaprasad meal is booked. Show this QR at the temple gate.
+                        </p>
+
+                        <div class="ticket-box">
+                            <div style="font-size:0.8rem;opacity:0.8;margin-bottom:2px;">
+                                🛕 Agara Shri Jagannatha Swamy Temple
+                            </div>
+                            <div style="font-size:0.8rem;opacity:0.8;margin-bottom:10px;">
+                                Mahaprasad (Abadha) Meal Ticket
+                            </div>
+
+                            <div class="qr-container">
+                                <img id="qrImage" src="" alt="Ticket QR Code">
+                            </div>
+
+                            <div class="ticket-number-display" id="ticketNumberDisplay">--</div>
+
+                            <div style="font-size:0.9rem;margin-top:12px;line-height:2;">
+                                <div>📅 Date: <strong id="ticketDate">--</strong></div>
+                                <div>👥 Persons: <strong id="ticketPersons">--</strong></div>
+                                <div>👤 Name: <strong id="ticketName">--</strong></div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 p-3 rounded"
+                            style="background:#d4edda;color:#155724;font-size:0.9rem;border-radius:12px!important;">
+                            ✅ Show this QR code at the temple gate to receive your Mahaprasad
+                        </div>
+
+                        <div class="d-flex gap-3 mt-4 justify-content-center flex-wrap">
+                            <button onclick="openPrint()" class="btn-action outline">🖨️ Print</button>
+                            <a href="/my-tickets"
+                                class="btn rounded-pill px-4"
+                                style="background:#FF6B00;color:white;font-weight:600;">
+                                📋 My Tickets
+                            </a>
+                            <a href="/booking"
+                                class="btn rounded-pill px-4"
+                                style="background:#8B0000;color:white;font-weight:600;">
+                                + New Booking
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ── Side Info Panel ── -->
+        <div class="col-lg-4">
+            <div class="info-side-card">
+                <h6 style="color:#8B0000;font-weight:700;margin-bottom:20px;">
+                    📋 Booking Information
+                </h6>
+
+                <div class="info-side-row">
+                    <span class="info-side-label">Temple</span>
+                    <span class="info-side-value">Agara Shri Jagannatha Swamy Temple</span>
+                </div>
+                <div class="info-side-row">
+                    <span class="info-side-label">Meal Type</span>
+                    <span class="info-side-value">Mahaprasad (Abadha)</span>
+                </div>
+                <div class="info-side-row">
+                    <span class="info-side-label">Price</span>
+                    <span class="info-side-value" style="color:#FF6B00;font-size:1.1rem;">₹130 per person</span>
+                </div>
+                <div class="info-side-row">
+                    <span class="info-side-label">⏰ Booking Cutoff</span>
+                    <span class="info-side-value" style="color:#dc3545;">9:00 AM daily</span>
+                </div>
+                <div class="info-side-row">
+                    <span class="info-side-label">Max per Booking</span>
+                    <span class="info-side-value">50 persons</span>
+                </div>
+
+                <div style="background:#fff3e0;border-left:3px solid #FF6B00;padding:12px;border-radius:8px;font-size:0.85rem;color:#666;margin-top:5px;">
+                    🙏 Mahaprasad is sacred food blessed by Lord Jagannath. Please book responsibly.
+                </div>
+
+                <!-- Today's Availability -->
+                <div style="margin-top:20px;padding-top:20px;border-top:1px solid #eee;">
+                    <h6 style="color:#333;font-weight:700;margin-bottom:12px;">📊 Today's Status</h6>
+                    <div class="row g-2 text-center">
+                        <div class="col-6">
+                            <div style="background:#f8f9fa;border-radius:10px;padding:12px;">
+                                <div style="font-size:1.5rem;font-weight:700;color:#FF6B00;" id="sideBooked">--</div>
+                                <div style="font-size:0.75rem;color:#888;">Booked</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div style="background:#f8f9fa;border-radius:10px;padding:12px;">
+                                <div style="font-size:1.5rem;font-weight:700;color:#28a745;" id="sideAvailable">--</div>
+                                <div style="font-size:0.75rem;color:#888;">Available</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+
+<script>
+
+/* ═══════════════════════════════════════════════
+   GLOBAL VARIABLES
+═══════════════════════════════════════════════ */
+const API = 'http://127.0.0.1:8001';
+const PRICE = 130;
+
+let currentUserId = null;
+let currentBookingId = null;
+let persons = 1;
+let selectedMethod = 'upi';
+
+/* ─── init ─── */
+loadSidebarStats();
+
+/* ═══════════════════════════════════════════════
+   AVAILABILITY CALENDAR
+   — Pure JS, zero libraries
+   — Fetches all dates in parallel on month load
+   — Colours: green / yellow / red / grey
+═══════════════════════════════════════════════ */
+const CAL = {
+    year  : new Date().getFullYear(),
+    month : new Date().getMonth(),       /* 0-based */
+    cache : {},                          /* "YYYY-MM-DD" → data */
+    selected : null                      /* "YYYY-MM-DD" */
+};
+
+const MONTH_NAMES = [
+    'January','February','March','April','May','June',
+    'July','August','September','October','November','December'
+];
+
+/* Called once on page load */
+function initCalendar() {
+    renderCalendar(CAL.year, CAL.month);
+}
+
+/* Navigate prev / next month */
+function calNavigate(delta) {
+    CAL.month += delta;
+    if (CAL.month > 11) { CAL.month = 0;  CAL.year++; }
+    if (CAL.month < 0)  { CAL.month = 11; CAL.year--; }
+    renderCalendar(CAL.year, CAL.month);
+}
+
+/* Main render function */
+async function renderCalendar(year, month) {
+    const label      = document.getElementById('calMonthLabel');
+    const container  = document.getElementById('calDates');
+    const prevBtn    = document.getElementById('calPrev');
+    const today      = new Date();
+    today.setHours(0,0,0,0);
+
+    label.textContent = MONTH_NAMES[month] + ' ' + year;
+
+    /* disable Prev if we are on current month */
+    prevBtn.disabled = (year === today.getFullYear() && month === today.getMonth());
+
+    /* get first day of month and total days */
+    const firstDay    = new Date(year, month, 1).getDay();  /* 0=Sun */
+    const totalDays   = new Date(year, month + 1, 0).getDate();
+
+    /* build skeleton grid immediately */
+    let html = '';
+
+    /* empty cells before first day */
+    for (let i = 0; i < firstDay; i++) {
+        html += '<div class="cal-cell empty"></div>';
+    }
+
+    /* date cells — skeleton state first */
+    for (let d = 1; d <= totalDays; d++) {
+        const dateStr = toDateStr(year, month, d);
+        const cellDate = new Date(year, month, d);
+        cellDate.setHours(0,0,0,0);
+
+        const isPast    = cellDate < today;
+        const isToday   = cellDate.getTime() === today.getTime();
+        const isSelected = (CAL.selected === dateStr);
+
+        if (isPast) {
+            html += '<div class="cal-cell past' + (isToday ? '' : '') + '">' + d + '</div>';
+        } else if (CAL.cache[dateStr]) {
+            html += buildCell(d, dateStr, CAL.cache[dateStr], isToday, isSelected);
+        } else {
+            html += '<div class="cal-cell skeleton" data-date="' + dateStr + '">' + d + '</div>';
+        }
+    }
+
+    container.innerHTML = html;
+
+    /* now fetch availability for all uncached future dates in parallel */
+    const dates = [];
+    for (let d = 1; d <= totalDays; d++) {
+        const dateStr  = toDateStr(year, month, d);
+        const cellDate = new Date(year, month, d);
+        cellDate.setHours(0,0,0,0);
+        if (!CAL.cache[dateStr] && cellDate >= today) {
+            dates.push(dateStr);
+        }
+    }
+
+    if (dates.length === 0) return;  /* all cached already */
+
+    /* fetch all in parallel */
+    const results = await Promise.allSettled(
+        dates.map(d =>
+            fetch(API + '/api/booking/availability/' + d)
+                .then(r => r.json())
+                .then(data => ({ date: d, data: data }))
+        )
+    );
+
+    results.forEach(result => {
+        if (result.status !== 'fulfilled') return;
+        const { date, data } = result.value;
+        CAL.cache[date] = data;
+    });
+
+    /* re-render with real data */
+    let newHtml = '';
+    for (let i = 0; i < firstDay; i++) {
+        newHtml += '<div class="cal-cell empty"></div>';
+    }
+    for (let d = 1; d <= totalDays; d++) {
+        const dateStr  = toDateStr(year, month, d);
+        const cellDate = new Date(year, month, d);
+        cellDate.setHours(0,0,0,0);
+        const isPast     = cellDate < today;
+        const isToday    = cellDate.getTime() === today.getTime();
+        const isSelected = (CAL.selected === dateStr);
+
+        if (isPast) {
+            newHtml += '<div class="cal-cell past">' + d + '</div>';
+        } else if (CAL.cache[dateStr]) {
+            newHtml += buildCell(d, dateStr, CAL.cache[dateStr], isToday, isSelected);
+        } else {
+            /* fetch failed — show neutral */
+            newHtml += '<div class="cal-cell past">' + d + '</div>';
+        }
+    }
+    container.innerHTML = newHtml;
+}
+
+/* Build a single date cell */
+function buildCell(day, dateStr, data, isToday, isSelected) {
+    const spots = data.available_spots;
+    const open  = data.is_booking_open;
+
+    let cls   = '';
+    let spotsHtml = '';
+
+    if (isSelected) {
+        cls = 'selected';
+        spotsHtml = '<span class="cal-spots">' + spots + ' left</span>';
+    } else if (!open && spots <= 0) {
+        cls = 'full';
+        spotsHtml = '<span class="cal-spots">Full</span>';
+    } else if (!open) {
+        /* cutoff passed */
+        cls = 'past';
+    } else if (spots < 20) {
+        cls = 'low';
+        spotsHtml = '<span class="cal-spots">' + spots + ' left</span>';
+    } else {
+        cls = 'open';
+        spotsHtml = '<span class="cal-spots">' + spots + '</span>';
+    }
+
+    const todayRing = isToday ? ' today-ring' : '';
+    const onclick   = (cls === 'full' || cls === 'past')
+        ? ''
+        : 'onclick="selectDate(\'' + dateStr + '\')"';
+
+    return '<div class="cal-cell ' + cls + todayRing + '" ' + onclick + '>'
+        + day
+        + spotsHtml
+        + '</div>';
+}
+
+/* User clicks a date */
+function selectDate(dateStr) {
+    CAL.selected = dateStr;
+
+    /* update hidden input */
+    document.getElementById('bookingDate').value = dateStr;
+
+    /* update the friendly chip */
+    const parts   = dateStr.split('-');
+    const display = parseInt(parts[2]) + ' ' + MONTH_NAMES[parseInt(parts[1]) - 1] + ' ' + parts[0];
+    document.getElementById('selectedDateText').textContent = display;
+    document.getElementById('selectedDateChip').classList.add('show');
+
+    /* re-render calendar to show selected state */
+    renderCalendar(CAL.year, CAL.month);
+
+    /* trigger existing availability badge below calendar */
+    checkAvailability();
+}
+
+/* Zero-padded date string helper */
+function toDateStr(year, month, day) {
+    return year + '-'
+        + String(month + 1).padStart(2, '0') + '-'
+        + String(day).padStart(2, '0');
+}
+
+/* Start calendar when step 2 becomes visible */
+function goToStep(stepId) {
+    document.querySelectorAll('.section-panel')
+        .forEach(p => p.classList.remove('active'));
+    document.getElementById(stepId).classList.add('active');
+
+    if (stepId === 'step2') {
+        initCalendar();
+    }
+}
+
+
+/* ═══════════════════════════════════════════════
+   TOAST NOTIFICATION
+═══════════════════════════════════════════════ */
+function showToast(message, type = 'error') {
+    const existing = document.querySelector('.toast-alert');
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.className = `toast-alert toast-${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+}
+
+
+/* ═══════════════════════════════════════════════
+   STEP NAVIGATION — see goToStep() above (calendar-aware)
+═══════════════════════════════════════════════ */
+
+function updateStepUI(step) {
+    for (let i = 1; i <= 4; i++) {
+        const dot = document.getElementById('dot' + i);
+        const label = document.getElementById('label' + i);
+        dot.classList.remove('active', 'completed');
+        label.classList.remove('active');
+
+        if (i < step) {
+            dot.classList.add('completed');
+            dot.innerHTML = '✓';
+        } else if (i === step) {
+            dot.classList.add('active');
+            dot.innerHTML = i;
+            label.classList.add('active');
+        } else {
+            dot.innerHTML = i;
+        }
+
+        if (i < 4) {
+            document.getElementById('line' + i)
+                .classList.toggle('active', i < step);
+        }
+    }
+}
+
+
+/* ═══════════════════════════════════════════════
+   PERSON COUNT
+═══════════════════════════════════════════════ */
+function changePersons(delta) {
+    persons = Math.max(1, Math.min(50, persons + delta));
+    document.getElementById('personsCount').textContent = persons;
+    document.getElementById('summaryPersons').textContent = persons;
+    document.getElementById('summaryTotal').textContent = '₹' + (persons * PRICE);
+}
+
+
+// 
+
+function openPrint() {
+    const ticketNum = document.getElementById('ticketNumberDisplay').textContent;
+    const name      = document.getElementById('ticketName').textContent;
+    const date      = document.getElementById('ticketDate').textContent;
+    const persons   = document.getElementById('ticketPersons').textContent;
+    const occasion  = document.getElementById('specialOccasion').value;
+    const qrSrc     = document.getElementById('qrImage').src;
+    const qr        = qrSrc.includes('base64,') ? qrSrc.split('base64,')[1] : '';
+    const bookedAt  = new Date().toLocaleString('en-IN');
+
+    const url = `/print-ticket?ticket=${encodeURIComponent(ticketNum)}&name=${encodeURIComponent(name)}&date=${encodeURIComponent(date)}&persons=${encodeURIComponent(persons)}&occasion=${encodeURIComponent(occasion)}&qr=${encodeURIComponent(qr)}&bookedAt=${encodeURIComponent(bookedAt)}`;
+    window.open(url, '_blank');
+}
+
+/* ═══════════════════════════════════════════════
+   PAYMENT METHOD SELECTION
+═══════════════════════════════════════════════ */
+function selectMethod(el, method) {
+    // Remove active from all boxes
+    document.querySelectorAll('.payment-method-box')
+        .forEach(b => b.classList.remove('active-method'));
+    el.classList.add('active-method');
+    selectedMethod = method;
+
+    // Show correct section
+    document.querySelectorAll('.payment-section')
+        .forEach(s => s.classList.remove('active'));
+    document.getElementById(method + '_section').classList.add('active');
+}
+
+
+/* ═══════════════════════════════════════════════
+   CARD FORMAT HELPERS
+═══════════════════════════════════════════════ */
+function formatCard(input) {
+    let v = input.value.replace(/\D/g, '').substring(0, 16);
+    input.value = v.replace(/(.{4})/g, '$1 ').trim();
+}
+
+function formatExpiry(input) {
+    let v = input.value.replace(/\D/g, '').substring(0, 4);
+    if (v.length >= 2) v = v.substring(0, 2) + '/' + v.substring(2);
+    input.value = v;
+}
+
+
+/* ═══════════════════════════════════════════════
+   AVAILABILITY CHECK
+═══════════════════════════════════════════════ */
+async function checkAvailability() {
+    const date = document.getElementById('bookingDate').value;
+    if (!date) return;
+
+    try {
+        const res = await fetch(`${API}/api/booking/availability/${date}`);
+        const data = await res.json();
+
+        const info = document.getElementById('availabilityInfo');
+        const badge = document.getElementById('availabilityBadge');
+        const text = document.getElementById('availabilityText');
+
+        info.style.display = 'block';
+
+        if (data.is_booking_open) {
+            badge.className = 'availability-badge badge-open';
+            badge.textContent = '✅ Open';
+            text.textContent = `${data.available_spots} spots available`;
+        } else {
+            badge.className = 'availability-badge badge-closed';
+            badge.textContent = '❌ Closed';
+            text.textContent = data.message;
+        }
+    } catch(e) {
+        console.log('Availability check failed');
+    }
+}
+
+async function loadSidebarStats() {
+    try {
+        const res = await fetch(`${API}/api/booking/availability/${today}`);
+        const data = await res.json();
+        const booked = data.total_capacity - data.available_spots;
+        document.getElementById('sideBooked').textContent = booked;
+        document.getElementById('sideAvailable').textContent = data.available_spots;
+    } catch(e) {
+        document.getElementById('sideBooked').textContent = '0';
+        document.getElementById('sideAvailable').textContent = '200';
+    }
+}
+
+
+/* ═══════════════════════════════════════════════
+   SEND OTP
+═══════════════════════════════════════════════ */
+async function sendOTP() {
+    const name = document.getElementById('userName').value.trim();
+    const mobile = document.getElementById('mobileNumber').value.trim();
+
+    if (!name) { showToast('Please enter your full name', 'warning'); return; }
+    if (mobile.length !== 10 || isNaN(mobile)) {
+        showToast('Please enter a valid 10-digit mobile number', 'warning');
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API}/api/auth/send-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mobile_number: mobile })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            showToast(data.detail || 'Failed to send OTP', 'error');
+            return;
+        }
+
+        document.getElementById('otpSentTo').textContent =
+            `OTP sent to +91 ${mobile} — Check your FastAPI terminal`;
+
+        showToast('OTP sent! Check terminal window', 'success');
+        goToStep('step1b');
+
+    } catch(e) {
+        showToast('Cannot connect to server. Is FastAPI running on port 8001?', 'error');
+    }
+}
+
+
+/* ═══════════════════════════════════════════════
+   VERIFY OTP
+═══════════════════════════════════════════════ */
+async function verifyOTP() {
+    const otp = document.getElementById('otpInput').value.trim();
+    const name = document.getElementById('userName').value.trim();
+    const mobile = document.getElementById('mobileNumber').value.trim();
+    const city = document.getElementById('userCity').value.trim();
+
+    if (otp.length !== 6) {
+        showToast('Please enter the 6-digit OTP', 'warning');
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API}/api/auth/verify-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                mobile_number: mobile,
+                otp_code: otp,
+                name: name,
+                city: city
+            })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            showToast(data.detail || 'Invalid OTP', 'error');
+            return;
+        }
+
+        currentUserId = data.user_id;
+        showToast('OTP verified! Welcome ' + name, 'success');
+        updateStepUI(2);
+        goToStep('step2');
+        checkAvailability();
+
+    } catch(e) {
+        showToast('Server error while verifying OTP', 'error');
+    }
+}
+
+
+/* ═══════════════════════════════════════════════
+   PROCEED TO PAYMENT
+═══════════════════════════════════════════════ */
+function proceedToPayment() {
+    if (!currentUserId) {
+        showToast('Please verify OTP first', 'warning');
+        goToStep('step1');
+        return;
+    }
+
+    const date = document.getElementById('bookingDate').value;
+    if (!date) { showToast('Please select meal date', 'warning'); return; }
+
+    const total = persons * PRICE;
+
+    document.getElementById('payDate').textContent = date;
+    document.getElementById('payPersons').textContent = persons + ' person(s)';
+    document.getElementById('payTotal').textContent = '₹' + total;
+    document.getElementById('payBtnAmount').textContent = '₹' + total;
+    document.getElementById('qrAmount').textContent = total;
+
+    // Update QR with correct amount
+    document.getElementById('paymentQR').src =
+        `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=abadhabook@ybl%26pn=AbadhaBook%26am=${total}%26cu=INR`;
+
+    updateStepUI(3);
+    goToStep('step3');
+}
+
+
+/* ═══════════════════════════════════════════════
+   PROCESSING OVERLAY
+═══════════════════════════════════════════════ */
+function showProcessing(message) {
+    const overlay = document.createElement('div');
+    overlay.className = 'processing-overlay';
+    overlay.id = 'processingOverlay';
+    overlay.innerHTML = `
+        <div class="processing-box">
+            <div class="processing-spinner"></div>
+            <h5 style="color:#333;margin-bottom:8px;font-weight:700;">${message}</h5>
+            <p style="color:#888;font-size:0.85rem;margin:0;">Please do not close this window...</p>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+}
+
+function updateProcessing(message) {
+    const h5 = document.querySelector('#processingOverlay h5');
+    if (h5) h5.textContent = message;
+}
+
+function hideProcessing() {
+    const overlay = document.getElementById('processingOverlay');
+    if (overlay) overlay.remove();
+}
+
+
+/* ═══════════════════════════════════════════════
+   VALIDATE PAYMENT FIELDS
+═══════════════════════════════════════════════ */
+function validatePaymentFields() {
+    if (selectedMethod === 'upi') {
+        const upi = document.getElementById('upiId').value.trim();
+        if (!upi) { showToast('Please enter your UPI ID', 'warning'); return false; }
+        if (!upi.includes('@')) { showToast('Invalid UPI ID. Example: name@upi', 'warning'); return false; }
+    }
+
+    if (selectedMethod === 'card') {
+        const card = document.getElementById('cardNumber').value.replace(/\s/g,'');
+        const expiry = document.getElementById('cardExpiry').value;
+        const cvv = document.getElementById('cardCvv').value;
+        const name = document.getElementById('cardName').value.trim();
+
+        if (card.length < 16) { showToast('Please enter valid card number', 'warning'); return false; }
+        if (expiry.length < 5) { showToast('Please enter expiry date', 'warning'); return false; }
+        if (cvv.length < 3) { showToast('Please enter CVV', 'warning'); return false; }
+        if (!name) { showToast('Please enter card holder name', 'warning'); return false; }
+    }
+
+    if (selectedMethod === 'netbanking') {
+        const bank = document.getElementById('bankSelect').value;
+        if (!bank) { showToast('Please select your bank', 'warning'); return false; }
+    }
+
+    return true;
+}
+
+
+/* ═══════════════════════════════════════════════
+   CONFIRM PAYMENT — MAIN FUNCTION
+═══════════════════════════════════════════════ */
+async function confirmPayment() {
+    if (!currentUserId) {
+        showToast('Session expired. Please login again.', 'error');
+        goToStep('step1');
+        return;
+    }
+
+    if (!validatePaymentFields()) return;
+
+    const date = document.getElementById('bookingDate').value;
+    const occasion = document.getElementById('specialOccasion').value;
+    const userName = document.getElementById('userName').value.trim();
+
+    // ── Step 1: Create Booking ──
+    showProcessing('Creating your booking...');
+
+    let bookingId;
+    try {
+        const bookingRes = await fetch(`${API}/api/booking/create`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        user_id: parseInt(currentUserId),
+        booking_date: date,
+        number_of_persons: parseInt(persons),
+        special_occasion: occasion ? occasion : null
+    })
+});
+
+const bookingData = await bookingRes.json();
+
+if (!bookingRes.ok) {
+    hideProcessing();
+    // Handle 422 validation errors properly
+    if (bookingRes.status === 422) {
+        const errors = bookingData.detail;
+        if (Array.isArray(errors)) {
+            const msg = errors.map(e => e.msg + ' (' + e.loc.join('→') + ')').join(', ');
+            showToast('Validation error: ' + msg, 'error');
+        } else {
+            showToast(String(errors), 'error');
+        }
+    } else {
+        showToast(bookingData.detail || 'Booking failed', 'error');
+    }
+    return;
+}
+        bookingId = bookingData.booking_id;
+        currentBookingId = bookingId;
+
+    } catch(e) {
+        hideProcessing();
+        showToast('Cannot connect to server. Is FastAPI running?', 'error');
+        return;
+    }
+
+    // ── Step 2: Simulate Payment Processing ──
+    updateProcessing('Processing payment...');
+    await new Promise(r => setTimeout(r, 1800));
+
+    updateProcessing('Verifying payment...');
+    await new Promise(r => setTimeout(r, 1200));
+
+    // ── Step 3: Confirm Payment on Backend ──
+    try {
+        await fetch(`${API}/api/payment/confirm/${bookingId}`, { method: 'PUT' });
+    } catch(e) {}
+
+    updateProcessing('Generating your ticket... 🎟️');
+    await new Promise(r => setTimeout(r, 1000));
+
+    // ── Step 4: Generate Ticket ──
+    try {
+        const ticketRes = await fetch(`${API}/api/ticket/generate/${bookingId}`, {
+            method: 'POST'
+        });
+        const ticketData = await ticketRes.json();
+
+        hideProcessing();
+
+        if (!ticketRes.ok) {
+            showToast('Payment done but ticket failed. Check My Tickets.', 'warning');
+            return;
+        }
+
+        // ── Step 5: Show Ticket ──
+        document.getElementById('ticketNumberDisplay').textContent = ticketData.ticket_number;
+        document.getElementById('ticketDate').textContent = date;
+        document.getElementById('ticketPersons').textContent = persons;
+        document.getElementById('ticketName').textContent = userName;
+
+        if (ticketData.qr_code) {
+            document.getElementById('qrImage').src =
+                'data:image/png;base64,' + ticketData.qr_code;
+        }
+
+        updateStepUI(4);
+        goToStep('step4');
+        showToast('Booking confirmed! 🎉', 'success');
+
+    } catch(e) {
+        hideProcessing();
+        showToast('Payment done! Check My Tickets page for your ticket.', 'warning');
+    }
+}
+
+</script>
+{% endblock %}

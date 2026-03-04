@@ -1,0 +1,712 @@
+{% extends 'base.html' %}
+
+{% block title %}My Tickets — AbadhaBook{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-hero {
+        background: linear-gradient(135deg, #8B0000, #FF6B00);
+        color: white;
+        padding: 50px 0 80px;
+        text-align: center;
+    }
+    .page-hero h1 { font-size: 2.2rem; font-weight: 700; }
+
+    .search-card {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        margin-top: -50px;
+        position: relative;
+        z-index: 10;
+    }
+
+    .ticket-card {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 5px 25px rgba(0,0,0,0.08);
+        margin-bottom: 20px;
+        border: 1px solid #f0f0f0;
+        transition: all 0.3s;
+    }
+    .ticket-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+    }
+
+    .ticket-header {
+        background: linear-gradient(135deg, #8B0000, #FF6B00);
+        color: white;
+        padding: 20px 25px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .ticket-number {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #FFD700;
+        letter-spacing: 2px;
+    }
+
+    .status-badge {
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .status-confirmed { background: #d4edda; color: #155724; }
+    .status-pending   { background: #fff3cd; color: #856404; }
+    .status-cancelled { background: #f8d7da; color: #721c24; }
+    .status-used      { background: #cce5ff; color: #004085; }
+
+    .ticket-body {
+        padding: 25px;
+        display: flex;
+        gap: 20px;
+        align-items: center;
+    }
+    .ticket-qr {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 10px;
+        text-align: center;
+        min-width: 110px;
+        position: relative;
+    }
+    .ticket-qr img {
+        width: 90px;
+        height: 90px;
+        border-radius: 8px;
+        display: block;
+        margin: 0 auto;
+    }
+    .ticket-details { flex: 1; }
+
+    .ticket-detail-row {
+        display: flex;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+        align-items: flex-start;
+    }
+    .ticket-detail-label {
+        color: #888;
+        min-width: 120px;
+        font-weight: 500;
+        flex-shrink: 0;
+    }
+    .ticket-detail-value { color: #333; font-weight: 600; }
+
+    .ticket-footer {
+        padding: 15px 25px;
+        background: #f8f9fa;
+        border-top: 1px solid #eee;
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+    .btn-small {
+        padding: 8px 20px;
+        border-radius: 25px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        font-family: 'Poppins', sans-serif;
+        transition: all 0.2s;
+    }
+    .btn-print        { background: #f0f0f0; color: #333; }
+    .btn-print:hover  { background: #e0e0e0; }
+    .btn-cancel       { background: #f8d7da; color: #721c24; }
+    .btn-cancel:hover { background: #f5c6cb; }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: #888; }
+    .empty-state .icon { font-size: 4rem; margin-bottom: 15px; }
+
+    .form-control {
+        border: 2px solid #eee;
+        border-radius: 12px;
+        padding: 12px 15px;
+        transition: all 0.3s;
+        width: 100%;
+        font-family: 'Poppins', sans-serif;
+        font-size: 1rem;
+    }
+    .form-control:focus {
+        border-color: #FF6B00;
+        box-shadow: 0 0 0 3px rgba(255,107,0,0.1);
+        outline: none;
+    }
+    .btn-saffron {
+        background: linear-gradient(135deg, #8B0000, #FF6B00);
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 12px 30px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-family: 'Poppins', sans-serif;
+        width: 100%;
+        font-size: 1rem;
+    }
+    .btn-saffron:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(255,107,0,0.4);
+        color: white;
+    }
+
+    .used-stamp {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%) rotate(-20deg);
+        border: 3px solid #004085;
+        color: #004085;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.8rem;
+        opacity: 0.7;
+        white-space: nowrap;
+        background: rgba(255,255,255,0.8);
+    }
+
+    /* ── TOAST ── */
+    .toast-alert {
+        position: fixed;
+        top: 20px; right: 20px;
+        z-index: 9999;
+        padding: 14px 22px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        animation: slideInToast 0.3s ease;
+        max-width: 340px;
+    }
+    @keyframes slideInToast {
+        from { transform: translateX(80px); opacity: 0; }
+        to   { transform: translateX(0);    opacity: 1; }
+    }
+    .toast-error   { background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545; }
+    .toast-success { background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
+    .toast-warning { background: #fff3cd; color: #856404; border-left: 4px solid #ffc107; }
+
+    /* ── CANCEL MODAL ── */
+    .cancel-modal-backdrop {
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.55);
+        z-index: 9998;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .cancel-modal-box {
+        background: white;
+        border-radius: 20px;
+        padding: 36px 32px;
+        width: 90%; max-width: 360px;
+        text-align: center;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    }
+    .cancel-modal-box h5 { font-weight: 700; color: #8B0000; margin-bottom: 8px; font-size: 1.1rem; }
+    .cancel-modal-box p  { color: #888; font-size: 0.9rem; margin-bottom: 24px; line-height: 1.5; }
+    .cancel-modal-btns   { display: flex; gap: 12px; }
+    .cancel-modal-btns button {
+        flex: 1; padding: 12px; border-radius: 12px;
+        font-weight: 600; font-size: 0.9rem;
+        cursor: pointer; border: none;
+        font-family: 'Poppins', sans-serif;
+        transition: all 0.2s;
+    }
+    .btn-keep               { background: #f0f0f0; color: #333; }
+    .btn-keep:hover         { background: #e0e0e0; }
+    .btn-confirm-cancel     { background: #dc3545; color: white; }
+    .btn-confirm-cancel:hover { background: #bb2d3b; }
+
+    @media (max-width: 576px) {
+        .ticket-body { flex-direction: column; align-items: flex-start; }
+        .ticket-qr   { width: 100%; min-width: unset; }
+        .ticket-detail-label { min-width: 100px; }
+    }
+
+    @media print {
+        .page-hero, .search-card, .ticket-footer,
+        nav, footer, .toast-alert,
+        .cancel-modal-backdrop { display: none !important; }
+        body { background: white !important; }
+        .ticket-card { box-shadow: none !important; border: 1px solid #ddd !important; }
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="page-hero">
+    <div class="container">
+        <h1>🎟️ My Tickets</h1>
+        <p style="opacity:0.9;">View and manage your Mahaprasad meal bookings</p>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+            <!-- Search Card -->
+            <div class="search-card mb-4">
+                <h6 style="color:#8B0000;font-weight:700;margin-bottom:15px;">🔍 Find Your Bookings</h6>
+                <div class="row g-3 align-items-end">
+                    <div class="col-8">
+                        <label style="font-weight:600;font-size:0.9rem;color:#333;
+                                      margin-bottom:6px;display:block;">
+                            Mobile Number
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text"
+                                style="border-radius:12px 0 0 12px;border:2px solid #eee;
+                                       border-right:none;background:white;
+                                       font-weight:600;font-size:1rem;">
+                                +91
+                            </span>
+                            <input type="tel"
+                                class="form-control"
+                                id="searchMobile"
+                                placeholder="Enter 10-digit mobile number"
+                                maxlength="10"
+                                style="border-radius:0 12px 12px 0;"
+                                onkeyup="if(event.key==='Enter') loadTickets()">
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <button class="btn-saffron" onclick="loadTickets()">🔍 Search</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tickets Container -->
+            <div id="ticketsContainer">
+                <div class="empty-state">
+                    <div class="icon">🎟️</div>
+                    <h5>Enter your mobile number to view tickets</h5>
+                    <p style="font-size:0.9rem;">
+                        All your Mahaprasad meal bookings will appear here
+                    </p>
+                    <a href="/booking"
+                       style="text-decoration:none;padding:12px 30px;border-radius:50px;
+                              display:inline-block;
+                              background:linear-gradient(135deg,#8B0000,#FF6B00);
+                              color:white;font-weight:600;margin-top:12px;">
+                        + Book a Meal
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Confirmation Modal -->
+<div class="cancel-modal-backdrop" id="cancelModal" style="display:none;">
+    <div class="cancel-modal-box">
+        <div style="font-size:2.5rem;margin-bottom:12px;">⚠️</div>
+        <h5>Cancel Booking?</h5>
+        <p>Are you sure you want to cancel this booking?<br>This action cannot be undone.</p>
+        <div class="cancel-modal-btns">
+            <button class="btn-keep" onclick="hideModal()">Keep Booking</button>
+            <button class="btn-confirm-cancel" id="modalConfirmBtn">Yes, Cancel</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+/* ════════════════════════════════════════════════════
+   GLOBALS
+════════════════════════════════════════════════════ */
+var API             = 'http://127.0.0.1:8001';
+var pendingCancelId = null;
+var lastSearchName  = 'Devotee';
+
+/*
+   KEY FIX — ticketDataStore
+   ─────────────────────────
+   Problem: putting ticket data directly inside onclick="..."
+   breaks when values contain quotes or special characters.
+
+   Solution: store all ticket objects in this array,
+   pass only the array INDEX (a plain integer) to onclick.
+   No quote issues ever.
+*/
+var ticketDataStore = [];
+
+
+/* ════════════════════════════════════════════════════
+   DATE / TIME HELPERS
+   MySQL returns "2026-02-27 12:58:00" (space, not T)
+   new Date("2026-02-27 12:58:00") = Invalid in Safari
+                                   = UTC in Chrome → wrong IST time
+
+   new Date("2026-02-28") = UTC midnight
+   → In India (IST = UTC+5:30) shows 27 Feb — WRONG
+
+   FIX: always normalise before parsing
+════════════════════════════════════════════════════ */
+function parseAnyDate(str) {
+    if (!str || str === '—') return null;
+    var s = String(str).trim();
+    /* MySQL datetime "2026-02-27 12:58:00" → "2026-02-27T12:58:00" */
+    if (s.length > 10 && s.charAt(10) === ' ') {
+        s = s.substring(0, 10) + 'T' + s.substring(11);
+    }
+    /* date-only "2026-02-28" → "2026-02-28T00:00:00" (local midnight) */
+    if (s.length === 10) {
+        s = s + 'T00:00:00';
+    }
+    var d = new Date(s);
+    return isNaN(d.getTime()) ? null : d;
+}
+
+function formatDate(str) {
+    var d = parseAnyDate(str);
+    if (!d) return str || '—';
+    return d.toLocaleDateString('en-IN', {
+        day: 'numeric', month: 'long', year: 'numeric'
+    });
+}
+
+function formatDateTime(str) {
+    var d = parseAnyDate(str);
+    if (!d) return str || '—';
+    return d.toLocaleString('en-IN', {
+        day: 'numeric', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', hour12: true
+    });
+}
+
+
+/* ════════════════════════════════════════════════════
+   TOAST
+════════════════════════════════════════════════════ */
+function showToast(msg, type) {
+    type = type || 'error';
+    document.querySelectorAll('.toast-alert').forEach(function(t) { t.remove(); });
+    var el = document.createElement('div');
+    el.className   = 'toast-alert toast-' + type;
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(function() { el.remove(); }, 4000);
+}
+
+
+/* ════════════════════════════════════════════════════
+   CANCEL MODAL
+════════════════════════════════════════════════════ */
+function showModal(id) {
+    pendingCancelId = id;
+    document.getElementById('cancelModal').style.display = 'flex';
+}
+
+function hideModal() {
+    document.getElementById('cancelModal').style.display = 'none';
+    pendingCancelId = null;
+}
+
+document.getElementById('modalConfirmBtn').addEventListener('click', async function() {
+    if (!pendingCancelId) return;
+    var id = pendingCancelId;
+    hideModal();
+    await cancelBooking(id);
+});
+
+document.getElementById('cancelModal').addEventListener('click', function(e) {
+    if (e.target === this) hideModal();
+});
+
+
+/* ════════════════════════════════════════════════════
+   LOAD TICKETS
+════════════════════════════════════════════════════ */
+async function loadTickets() {
+    var mobile = document.getElementById('searchMobile').value.trim();
+
+    if (mobile.length !== 10 || isNaN(Number(mobile))) {
+        showToast('Please enter a valid 10-digit mobile number', 'warning');
+        return;
+    }
+
+    /* reset store on every new search */
+    ticketDataStore = [];
+
+    var container = document.getElementById('ticketsContainer');
+    container.innerHTML =
+        '<div class="text-center py-5">'
+        + '<div class="spinner-border" style="color:#FF6B00;" role="status"></div>'
+        + '<p class="mt-3 text-muted">Searching for your bookings...</p>'
+        + '</div>';
+
+    try {
+        /* Step 1 — get user by mobile */
+        var userRes  = await fetch(API + '/api/booking/user/mobile/' + mobile);
+        var userData = await userRes.json();
+
+        if (!userRes.ok || !userData.user_id) {
+            container.innerHTML = buildEmpty(
+                '📭', 'No Account Found',
+                'No bookings found for this mobile number.'
+            );
+            return;
+        }
+
+        lastSearchName = userData.name || 'Devotee';
+
+        /* Step 2 — get bookings */
+        var bRes  = await fetch(API + '/api/booking/user/' + userData.user_id);
+        var bData = await bRes.json();
+
+        if (!bData.bookings || bData.bookings.length === 0) {
+            container.innerHTML = buildEmpty(
+                '📭', 'No Bookings Yet',
+                'You have not made any bookings yet.'
+            );
+            return;
+        }
+
+        renderTickets(bData);
+
+    } catch(e) {
+        container.innerHTML = buildEmpty(
+            '⚠️', 'Connection Error',
+            'Cannot connect to server. Make sure FastAPI is running on port 8001.'
+        );
+    }
+}
+
+
+/* ════════════════════════════════════════════════════
+   EMPTY STATE
+════════════════════════════════════════════════════ */
+function buildEmpty(icon, title, sub) {
+    return '<div class="empty-state">'
+        + '<div class="icon">' + icon + '</div>'
+        + '<h5>' + title + '</h5>'
+        + '<p style="font-size:0.9rem;">' + sub + '</p>'
+        + '<a href="/booking" style="text-decoration:none;padding:12px 30px;'
+        + 'border-radius:50px;display:inline-block;'
+        + 'background:linear-gradient(135deg,#8B0000,#FF6B00);'
+        + 'color:white;font-weight:600;margin-top:12px;">+ Book a Meal</a>'
+        + '</div>';
+}
+
+
+/* ════════════════════════════════════════════════════
+   RENDER TICKETS
+════════════════════════════════════════════════════ */
+function renderTickets(data) {
+    var container = document.getElementById('ticketsContainer');
+
+    var html =
+        '<div class="d-flex justify-content-between align-items-center mb-3">'
+        + '<h6 style="color:#333;font-weight:700;margin:0;">Found '
+        + data.total_bookings + ' booking(s)</h6>'
+        + '<a href="/booking" style="text-decoration:none;padding:8px 22px;'
+        + 'border-radius:25px;font-size:0.85rem;font-weight:600;'
+        + 'background:linear-gradient(135deg,#8B0000,#FF6B00);color:white;">'
+        + '+ New Booking</a></div>';
+
+    for (var i = 0; i < data.bookings.length; i++) {
+        var b = data.bookings[i];
+
+        var isUsed      = b.is_used === true || b.is_used === 1;
+        var isCancelled = b.status === 'cancelled';
+        var isConfirmed = b.status === 'confirmed';
+
+        var statusClass = isUsed      ? 'status-used'      :
+                          isCancelled ? 'status-cancelled'  :
+                          isConfirmed ? 'status-confirmed'  : 'status-pending';
+
+        var statusText  = isUsed      ? '✅ Used'      :
+                          isCancelled ? '❌ Cancelled' :
+                          isConfirmed ? '✅ Confirmed' : '⏳ Pending';
+
+        var total        = b.number_of_persons * 130;
+        var tn           = b.ticket_number || 'Pending';
+        var mealDate     = formatDate(b.booking_date);
+        var bookedOn     = formatDateTime(b.created_at);
+
+        /* ── store ticket data, use index in onclick ── */
+        var idx = ticketDataStore.length;
+        ticketDataStore.push({
+            ticketNum : tn,
+            date      : b.booking_date  || '',
+            persons   : b.number_of_persons,
+            name      : lastSearchName,
+            createdAt : b.created_at    || '',
+            qrCode    : b.qr_code       || ''
+        });
+
+        /* cancel button */
+        var cancelBtn = '';
+        if (!isCancelled && !isUsed) {
+            cancelBtn = '<button class="btn-small btn-cancel"'
+                + ' onclick="showModal(' + b.booking_id + ')">'
+                + '❌ Cancel</button>';
+        }
+
+        /* print button — safe: only passes integer index */
+        var printBtn = '<button class="btn-small btn-print"'
+            + ' onclick="openPrintPage(' + idx + ')">'
+            + '🖨️ Print</button>';
+
+        /* QR display — show real QR if available, else placeholder */
+        var qrHtml;
+        if (b.qr_code && b.qr_code.length > 10) {
+            qrHtml = '<img src="data:image/png;base64,' + b.qr_code
+                + '" alt="QR Code">'
+                + '<div style="font-size:0.65rem;color:#888;margin-top:4px;">QR Code</div>';
+        } else {
+            qrHtml = '<div style="font-size:2.5rem;">🎟️</div>'
+                + '<div style="font-size:0.7rem;color:#888;margin-top:5px;">'
+                + (b.ticket_number ? 'QR Code' : 'Pending') + '</div>';
+        }
+
+        html +=
+            '<div class="ticket-card">'
+
+            /* HEADER */
+            + '<div class="ticket-header">'
+            +   '<div>'
+            +     '<div style="font-size:0.75rem;opacity:0.8;margin-bottom:3px;">'
+            +       '🛕 Agara Shri Jagannatha Swamy Temple'
+            +     '</div>'
+            +     '<div class="ticket-number">' + tn + '</div>'
+            +   '</div>'
+            +   '<span class="status-badge ' + statusClass + '">' + statusText + '</span>'
+            + '</div>'
+
+            /* BODY */
+            + '<div class="ticket-body">'
+
+            +   '<div class="ticket-qr">'
+            +     qrHtml
+            +     (isUsed ? '<div class="used-stamp">USED</div>' : '')
+            +   '</div>'
+
+            +   '<div class="ticket-details">'
+            +     '<div class="ticket-detail-row">'
+            +       '<span class="ticket-detail-label">📅 Meal Date</span>'
+            +       '<span class="ticket-detail-value">' + mealDate + '</span>'
+            +     '</div>'
+            +     '<div class="ticket-detail-row">'
+            +       '<span class="ticket-detail-label">👥 Persons</span>'
+            +       '<span class="ticket-detail-value">'
+            +         b.number_of_persons + ' person(s)'
+            +       '</span>'
+            +     '</div>'
+            +     '<div class="ticket-detail-row">'
+            +       '<span class="ticket-detail-label">💰 Amount</span>'
+            +       '<span class="ticket-detail-value" style="color:#FF6B00;">'
+            +         '₹' + total
+            +       '</span>'
+            +     '</div>'
+            +     '<div class="ticket-detail-row">'
+            +       '<span class="ticket-detail-label">📋 Status</span>'
+            +       '<span class="ticket-detail-value">' + statusText + '</span>'
+            +     '</div>'
+            +     '<div class="ticket-detail-row">'
+            +       '<span class="ticket-detail-label">🕐 Booked On</span>'
+            +       '<span class="ticket-detail-value"'
+            +         ' style="font-size:0.85rem;color:#666;">'
+            +         bookedOn
+            +       '</span>'
+            +     '</div>'
+            +   '</div>'
+
+            + '</div>'  /* end ticket-body */
+
+            /* FOOTER */
+            + '<div class="ticket-footer">'
+            +   cancelBtn
+            +   printBtn
+            + '</div>'
+
+            + '</div>';  /* end ticket-card */
+    }
+
+    container.innerHTML = html;
+}
+
+
+/* ════════════════════════════════════════════════════
+   OPEN PRINT PAGE
+   Reads ticket data from ticketDataStore by index.
+   No quote-breaking, no data loss.
+════════════════════════════════════════════════════ */
+function openPrintPage(index) {
+    var d = ticketDataStore[index];
+    if (!d) {
+        showToast('Ticket data not found. Please search again.', 'error');
+        return;
+    }
+
+    /* format booked-at time correctly */
+    var bookedAt;
+    if (d.createdAt && d.createdAt !== '') {
+        var dt = parseAnyDate(d.createdAt);
+        if (dt) {
+            bookedAt = dt.toLocaleString('en-IN', {
+                day: 'numeric', month: 'short', year: 'numeric',
+                hour: '2-digit', minute: '2-digit', hour12: true
+            });
+        } else {
+            bookedAt = d.createdAt;
+        }
+    } else {
+        bookedAt = new Date().toLocaleString('en-IN', {
+            day: 'numeric', month: 'short', year: 'numeric',
+            hour: '2-digit', minute: '2-digit', hour12: true
+        });
+    }
+
+    var url = '/print-ticket/'
+        + '?ticket='   + encodeURIComponent(d.ticketNum)
+        + '&name='     + encodeURIComponent(d.name)
+        + '&date='     + encodeURIComponent(d.date)
+        + '&persons='  + encodeURIComponent(d.persons)
+        + '&bookedAt=' + encodeURIComponent(bookedAt)
+        + (d.qrCode ? '&qr=' + encodeURIComponent(d.qrCode) : '');
+
+    window.open(url, '_blank');
+}
+
+
+/* ════════════════════════════════════════════════════
+   CANCEL BOOKING
+════════════════════════════════════════════════════ */
+async function cancelBooking(bookingId) {
+    try {
+        var res  = await fetch(
+            API + '/api/booking/cancel/' + bookingId,
+            { method: 'PUT' }
+        );
+        var data = await res.json();
+
+        if (data.success) {
+            showToast('Booking cancelled successfully', 'success');
+            await loadTickets();
+        } else {
+            showToast(data.detail || 'Could not cancel booking', 'error');
+        }
+    } catch(e) {
+        showToast('Error cancelling booking. Try again.', 'error');
+    }
+}
+</script>
+{% endblock %}

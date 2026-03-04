@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AbadhaBook — Print Ticket</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    --crimson:  #8B0000;
+    --saffron:  #FF6B00;
+    --gold:     #FFD700;
+    --cream:    #FFF8F0;
+    --cream2:   #FFE8D0;
+    --text:     #333;
+    --muted:    #888;
+    --green:    #28a745;
+    --gradient: linear-gradient(135deg, #8B0000, #FF6B00);
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--cream);
+    min-height: 100vh;
+    color: var(--text);
+}
+
+/* ── HERO (same as booking.html) ── */
+.booking-hero {
+    background: var(--gradient);
+    color: white;
+    padding: 40px 0 60px;
+    text-align: center;
+}
+.booking-hero h1 { font-size: 2rem; font-weight: 700; }
+.booking-hero p  { opacity: 0.9; font-size: 1rem; margin-top: 6px; }
+
+/* ── CONTAINER ── */
+.container {
+    max-width: 700px;
+    margin: -30px auto 50px;
+    padding: 0 20px;
+    position: relative;
+    z-index: 10;
+}
+
+/* ── BUTTONS ── */
+.action-bar { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+
+.btn-saffron {
+    background: var(--gradient);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 13px 32px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    transition: all 0.3s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.btn-saffron:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255,107,0,0.4);
+    color: white;
+}
+
+.btn-outline {
+    background: white;
+    color: var(--crimson);
+    border: 2px solid var(--crimson);
+    border-radius: 50px;
+    padding: 11px 28px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    transition: all 0.3s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.btn-outline:hover {
+    background: var(--cream);
+    transform: translateY(-2px);
+    color: var(--crimson);
+}
+
+/* ── TICKET CARD ── */
+.ticket-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+/* ── TICKET HEADER ── */
+.ticket-header {
+    background: var(--gradient);
+    padding: 30px 36px 32px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+.ticket-header::before {
+    content: 'ॐ';
+    position: absolute;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 110px;
+    opacity: 0.07;
+    line-height: 1;
+    font-family: serif;
+    pointer-events: none;
+}
+
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    position: relative;
+}
+.temple-tag {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--gold);
+    margin-bottom: 5px;
+}
+.temple-name-txt {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.92);
+}
+.confirmed-pill {
+    background: rgba(40,167,69,0.25);
+    border: 1.5px solid rgba(40,167,69,0.5);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #86EFAC;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.header-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    position: relative;
+}
+.ticket-big-title { font-size: 2rem; font-weight: 700; color: white; line-height: 1; margin-bottom: 4px; }
+.ticket-big-sub   { font-size: 0.78rem; color: rgba(255,255,255,0.65); }
+.ticket-num-right { text-align: right; }
+.tn-label {
+    font-size: 0.63rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 4px;
+}
+.tn-value {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 2.5px;
+}
+
+/* ── TEAR LINE ── */
+.tear-line {
+    display: flex;
+    align-items: center;
+    height: 34px;
+    background: var(--cream);
+    position: relative;
+}
+.tear-line::before {
+    content: '';
+    position: absolute;
+    left: -16px;
+    width: 32px; height: 32px;
+    background: var(--cream);
+    border-radius: 50%;
+    z-index: 2;
+}
+.tear-line::after {
+    content: '';
+    position: absolute;
+    right: -16px;
+    width: 32px; height: 32px;
+    background: var(--cream);
+    border-radius: 50%;
+    z-index: 2;
+}
+.tear-inner {
+    flex: 1;
+    margin: 0 20px;
+    border: none;
+    border-top: 2.5px dashed #ddd;
+    position: relative;
+}
+.tear-label {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--cream);
+    padding: 0 10px;
+    font-size: 0.58rem;
+    color: #ccc;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+    white-space: nowrap;
+    z-index: 3;
+}
+
+/* ── TICKET BODY ── */
+.ticket-body {
+    padding: 28px 36px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 28px;
+    align-items: center;
+}
+
+.details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px 20px;
+}
+
+.d-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+    margin-bottom: 4px;
+}
+.d-value       { font-size: 0.95rem; font-weight: 600; color: var(--text); }
+.d-value.big   { font-size: 1.15rem; font-weight: 700; color: var(--crimson); }
+.d-value.ok    { font-weight: 700; color: var(--green); }
+
+/* ── QR CODE ── */
+.qr-section { text-align: center; flex-shrink: 0; }
+
+.qr-frame {
+    background: white;
+    border: 2px solid #eee;
+    border-radius: 16px;
+    padding: 14px;
+    display: inline-block;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    position: relative;
+}
+/* Corner accents */
+.qr-frame::before,
+.qr-frame::after {
+    content: '';
+    position: absolute;
+    width: 13px; height: 13px;
+    border-color: var(--crimson);
+    border-style: solid;
+    border-radius: 2px;
+}
+.qr-frame::before { top: 7px;    left: 7px;    border-width: 2.5px 0 0 2.5px; }
+.qr-frame::after  { bottom: 7px; right: 7px;   border-width: 0 2.5px 2.5px 0; }
+
+.qr-frame img { width: 130px; height: 130px; display: block; border-radius: 8px; }
+.qr-lbl {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+    margin-top: 8px;
+}
+
+/* ── PRICE STRIP (same colors as booking.html price-summary) ── */
+.price-strip {
+    background: linear-gradient(135deg, #fff8f0, #ffe8d0);
+    border-top: 2px solid var(--gold);
+    border-bottom: 2px solid var(--gold);
+    padding: 16px 36px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.ps-item { text-align: center; }
+.ps-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #a08050;
+    margin-bottom: 3px;
+}
+.ps-value     { font-size: 0.88rem; font-weight: 700; color: var(--crimson); }
+.ps-value.big { font-size: 1.15rem; color: var(--saffron); }
+.ps-div { width: 1px; height: 32px; background: rgba(201,149,42,0.3); }
+
+/* ── TICKET FOOTER ── */
+.ticket-footer {
+    background: #fafaf8;
+    border-top: 1px solid #eee;
+    padding: 14px 36px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.footer-brand { font-size: 1rem; font-weight: 700; color: var(--crimson); }
+.footer-brand span { color: var(--saffron); }
+.footer-verified {
+    background: #d4edda;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #155724;
+}
+.footer-right { font-size: 0.7rem; color: var(--muted); text-align: right; line-height: 1.7; }
+.footer-right strong { color: #555; }
+
+/* ── INSTRUCTIONS ── */
+.instr-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    padding: 20px 24px;
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+}
+.instr-box {
+    background: var(--cream);
+    border: 1.5px solid #ffe0b5;
+    border-radius: 12px;
+    padding: 14px 12px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+.instr-icon { font-size: 1.3rem; flex-shrink: 0; }
+.instr-ttl  { font-size: 0.78rem; font-weight: 700; color: var(--crimson); margin-bottom: 3px; }
+.instr-dsc  { font-size: 0.72rem; color: var(--muted); line-height: 1.4; }
+
+/* ════════════════════════════════════════════════════
+   PRINT STYLES
+════════════════════════════════════════════════════ */
+@media print {
+    @page { size: A4; margin: 12mm 14mm; }
+
+    body { background: white !important; }
+
+    .booking-hero,
+    .action-bar { display: none !important; }
+
+    .container { margin: 0 auto; max-width: 100%; }
+
+    .ticket-card {
+        border-radius: 14px;
+        border: 1px solid #ddd;
+        box-shadow: none;
+    }
+
+    /* Force colors to print */
+    .ticket-header {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        background: linear-gradient(135deg, #8B0000, #FF6B00) !important;
+    }
+    .price-strip {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        background: linear-gradient(135deg, #fff8f0, #ffe8d0) !important;
+    }
+    .instr-box {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        background: #FFF8F0 !important;
+    }
+    .ticket-footer {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        background: #fafaf8 !important;
+    }
+
+    /* Tear line circles match white print background */
+    .tear-line,
+    .tear-line::before,
+    .tear-line::after { background: white !important; }
+
+    .instr-card {
+        margin-top: 8mm;
+        page-break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #eee;
+    }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+    .ticket-body        { grid-template-columns: 1fr; }
+    .instr-card         { grid-template-columns: 1fr; }
+    .details-grid       { grid-template-columns: 1fr 1fr; }
+    .price-strip        { justify-content: flex-start; }
+    .ticket-header      { padding: 22px 20px; }
+    .ticket-body        { padding: 22px 20px; }
+    .ticket-footer      { padding: 14px 20px; flex-wrap: wrap; gap: 10px; }
+    .price-strip        { padding: 14px 20px; }
+    .action-bar         { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="booking-hero">
+    <h1>🎟️ Your Mahaprasad Ticket</h1>
+    <p>Agara Shri Jagannatha Swamy Temple — Ready to Print</p>
+</div>
+
+<div class="container">
+
+    <!-- Action Buttons -->
+    <div class="action-bar">
+        <button class="btn-saffron" onclick="window.print()">🖨️ Print Ticket / Save as PDF</button>
+        <a href="/booking"   class="btn-outline">+ New Booking</a>
+        <a href="/my-tickets" class="btn-outline">📋 My Tickets</a>
+    </div>
+
+    <!-- ══ TICKET CARD ══ -->
+    <div class="ticket-card">
+
+        <!-- HEADER -->
+        <div class="ticket-header">
+            <div class="header-top">
+                <div>
+                    <div class="temple-tag">🛕 Official Meal Ticket</div>
+                    <div class="temple-name-txt">Agara Shri Jagannatha Swamy Temple</div>
+                </div>
+                <div class="confirmed-pill">✓ Confirmed</div>
+            </div>
+            <div class="header-bottom">
+                <div>
+                    <div class="ticket-big-title">Abadha</div>
+                    <div class="ticket-big-sub">Sacred Mahaprasad Meal · Blessed by Lord Jagannath</div>
+                </div>
+                <div class="ticket-num-right">
+                    <div class="tn-label">Ticket Number</div>
+                    <div class="tn-value" id="printTicketNum">ABK-XXXXXXXX</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TEAR LINE -->
+        <div class="tear-line">
+            <div class="tear-inner">
+                <span class="tear-label">✂ &nbsp; show this qr at temple gate &nbsp; ✂</span>
+            </div>
+        </div>
+
+        <!-- BODY -->
+        <div class="ticket-body">
+            <div class="details-grid">
+                <div>
+                    <div class="d-label">Devotee Name</div>
+                    <div class="d-value big" id="printName">—</div>
+                </div>
+                <div>
+                    <div class="d-label">Meal Date</div>
+                    <div class="d-value big" id="printDate">—</div>
+                </div>
+                <div>
+                    <div class="d-label">Persons</div>
+                    <div class="d-value big" id="printPersons">—</div>
+                </div>
+                <div>
+                    <div class="d-label">Amount Paid</div>
+                    <div class="d-value big" id="printAmount" style="color:var(--saffron);">—</div>
+                </div>
+                <div>
+                    <div class="d-label">Booked On</div>
+                    <div class="d-value" id="printBookedAt">—</div>
+                </div>
+                <div>
+                    <div class="d-label">Status</div>
+                    <div class="d-value ok">✓ Payment Confirmed</div>
+                </div>
+            </div>
+
+            <!-- QR CODE -->
+            <div class="qr-section">
+                <div class="qr-frame">
+                    <img id="printQR" src="" alt="Ticket QR Code" width="130" height="130">
+                </div>
+                <div class="qr-lbl">Scan at Temple Gate</div>
+            </div>
+        </div>
+
+        <!-- PRICE STRIP -->
+        <div class="price-strip">
+            <div class="ps-item">
+                <div class="ps-label">Price / Person</div>
+                <div class="ps-value">₹130</div>
+            </div>
+            <div class="ps-div"></div>
+            <div class="ps-item">
+                <div class="ps-label">Persons</div>
+                <div class="ps-value" id="stripPersons">—</div>
+            </div>
+            <div class="ps-div"></div>
+            <div class="ps-item">
+                <div class="ps-label">Total Paid</div>
+                <div class="ps-value big" id="stripTotal">—</div>
+            </div>
+            <div class="ps-div"></div>
+            <div class="ps-item">
+                <div class="ps-label">Cutoff Time</div>
+                <div class="ps-value">9:00 AM</div>
+            </div>
+            <div class="ps-div"></div>
+            <div class="ps-item">
+                <div class="ps-label">Valid For</div>
+                <div class="ps-value" id="stripValidDate">—</div>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="ticket-footer">
+            <div class="footer-brand">Abadha<span>Book</span></div>
+            <div class="footer-verified">✓ Verified Booking</div>
+            <div class="footer-right">
+                <div>abadhabook.com</div>
+                <div><strong id="footerTN">—</strong></div>
+            </div>
+        </div>
+
+    </div><!-- /.ticket-card -->
+
+    <!-- INSTRUCTIONS -->
+    <div class="instr-card">
+        <div class="instr-box">
+            <span class="instr-icon">📱</span>
+            <div>
+                <div class="instr-ttl">Show QR Code</div>
+                <div class="instr-dsc">Present this QR code to temple staff at the entry gate for scanning</div>
+            </div>
+        </div>
+        <div class="instr-box">
+            <span class="instr-icon">🕘</span>
+            <div>
+                <div class="instr-ttl">Arrive on Time</div>
+                <div class="instr-dsc">Please arrive at the temple during Mahaprasad serving hours</div>
+            </div>
+        </div>
+        <div class="instr-box">
+            <span class="instr-icon">🙏</span>
+            <div>
+                <div class="instr-ttl">One-Time Use</div>
+                <div class="instr-dsc">This ticket is valid for one-time use only on the booked date</div>
+            </div>
+        </div>
+    </div>
+
+</div><!-- /.container -->
+
+<script>
+/* ════════════════════════════════════════════════════
+   DATE HELPER
+   ─────────────────────────────────────────────────
+   FIX: new Date("2026-02-28") → parsed as UTC midnight
+        → In IST (UTC+5:30) this shows 27 Feb — WRONG!
+
+   SOLUTION for date-only strings: append T00:00:00
+   so the browser treats it as LOCAL midnight, not UTC.
+
+   SOLUTION for MySQL datetime "2026-02-27 12:58:00":
+   replace space with T before parsing.
+════════════════════════════════════════════════════ */
+function parseAnyDate(str) {
+    if (!str || str === '—') return null;
+    var s = String(str).trim();
+    // MySQL datetime: "2026-02-27 12:58:00" → "2026-02-27T12:58:00"
+    if (s.length > 10 && s.charAt(10) === ' ') {
+        s = s.substring(0, 10) + 'T' + s.substring(11);
+    }
+    // date-only: "2026-02-28" → "2026-02-28T00:00:00" (local midnight)
+    if (s.length === 10) {
+        s = s + 'T00:00:00';
+    }
+    var d = new Date(s);
+    return isNaN(d.getTime()) ? null : d;
+}
+
+function formatDate(str) {
+    var d = parseAnyDate(str);
+    if (!d) return str || '—';
+    return d.toLocaleDateString('en-IN', {
+        day: 'numeric', month: 'long', year: 'numeric'
+    });
+}
+
+/* ════════════════════════════════════════════════════
+   READ URL PARAMETERS & POPULATE TICKET
+════════════════════════════════════════════════════ */
+var params    = new URLSearchParams(window.location.search);
+var ticketNum = params.get('ticket')  || 'ABK-XXXXXXXX';
+var name      = params.get('name')    || '—';
+var date      = params.get('date')    || '—';        // e.g. "2026-02-28"
+var persons   = parseInt(params.get('persons') || '1', 10);
+var qr        = params.get('qr')      || '';
+var bookedAt  = params.get('bookedAt')|| '—';        // already formatted by my_tickets.html
+var total     = persons * 130;
+
+/* Populate all fields */
+document.getElementById('printTicketNum').textContent = ticketNum;
+document.getElementById('printName').textContent      = name;
+document.getElementById('printDate').textContent      = formatDate(date);   /* FIX: correct date */
+document.getElementById('printPersons').textContent   = persons + ' Person(s)';
+document.getElementById('printAmount').textContent    = '₹' + total;
+document.getElementById('printBookedAt').textContent  = bookedAt;           /* pre-formatted */
+document.getElementById('stripPersons').textContent   = persons;
+document.getElementById('stripTotal').textContent     = '₹' + total;
+document.getElementById('stripValidDate').textContent = formatDate(date);   /* FIX: correct date */
+document.getElementById('footerTN').textContent       = ticketNum;
+
+/* QR Code — use base64 from booking flow if available,
+   otherwise generate from ticket number */
+if (qr && qr.length > 10) {
+    document.getElementById('printQR').src = 'data:image/png;base64,' + qr;
+} else {
+    document.getElementById('printQR').src =
+        'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='
+        + encodeURIComponent('ABADHABOOK|' + ticketNum + '|' + date + '|' + persons);
+}
+
+/* Auto-print if URL has ?print=1 */
+if (params.get('print') === '1') {
+    setTimeout(function() { window.print(); }, 700);
+}
+</script>
+</body>
+</html>
